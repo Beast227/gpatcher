@@ -26,7 +26,7 @@ function Invoke-Apply {
                 $unpacked = $PatchPath
                 $skipUnpack = $true
             } else {
-                $zips = Get-ChildItem -LiteralPath $PatchPath -Filter '*.zip' -File
+                $zips = @(Get-ChildItem -LiteralPath $PatchPath -Filter '*.zip' -File)
                 if ($zips.Count -gt 0) {
                     $patchLocal = $zips[0].FullName
                     LogInfo "Found patch ZIP: $($zips[0].Name)"
