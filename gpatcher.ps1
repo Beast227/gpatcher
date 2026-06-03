@@ -19,7 +19,7 @@ gpatcher -- game patch producer/consumer
 
 Usage:
   gpatcher create  --old <dir> --new <dir> --game <name> --old-ver <v> --new-ver <v> [--out <dir>]
-  gpatcher apply   --patch <path-or-url> --target <install-dir> [--dry-run] [--no-backup]
+  gpatcher apply   --patch <path-or-url> --target <install-dir> [--dry-run] [--no-backup] [--keep-backup]
   gpatcher restore --target <install-dir> [--backup <dir-or-latest>] [--keep-backup]
   gpatcher upload  --patch <bundle.zip> [--creator <name>] [--description <text>]
   gpatcher search  <game-name>
@@ -172,7 +172,8 @@ try {
                 -PatchPath (Get-RequiredFlag $parsed.Flags 'patch') `
                 -Target    (Get-RequiredFlag $parsed.Flags 'target') `
                 -DryRun:($parsed.Flags.ContainsKey('dry-run')) `
-                -NoBackup:($parsed.Flags.ContainsKey('no-backup'))
+                -NoBackup:($parsed.Flags.ContainsKey('no-backup')) `
+                -KeepBackup:($parsed.Flags.ContainsKey('keep-backup'))
         }
         'restore' {
             $bk = Get-OptionalFlag $parsed.Flags 'backup' 'latest'

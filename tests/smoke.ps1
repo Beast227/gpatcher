@@ -112,6 +112,16 @@ Run-Test 'Apply patch (no-backup)' {
     if ($LASTEXITCODE -ne 0) { throw "apply failed (exit $LASTEXITCODE)" }
 }
 
+Run-Test 'Apply patch deletes backup by default' {
+    $workD = Join-Path $tmp 'work-default'
+    if (Test-Path $workD) { Remove-Item $workD -Recurse -Force }
+    Copy-Item -LiteralPath $v1 -Destination $workD -Recurse -Force
+    & $cli apply --patch $bundle.FullName --target $workD
+    if ($LASTEXITCODE -ne 0) { throw "apply failed" }
+    $bk = @(Get-ChildItem -LiteralPath $workD -Filter '.gpatcher-backup-*' -Directory -Force -ErrorAction SilentlyContinue)
+    if ($bk.Count -ne 0) { throw "Backup folder was not deleted on success!" }
+}
+
 Run-Test 'Hash-compare workspace vs v2' {
     $hWork = Hash-Dir $work
     $hV2   = Hash-Dir $v2
@@ -124,7 +134,7 @@ Run-Test 'Restore from backup undoes apply' {
     $workR = Join-Path $tmp 'work-restore'
     Copy-Item -LiteralPath $v1 -Destination $workR -Recurse -Force
 
-    & $cli apply --patch $bundle.FullName --target $workR
+    & $cli apply --patch $bundle.FullName --target $workR --keep-backup
     if ($LASTEXITCODE -ne 0) { throw "apply (with backup) failed (exit $LASTEXITCODE)" }
 
     $bk = @(Get-ChildItem -LiteralPath $workR -Filter '.gpatcher-backup-*' -Directory -Force)
@@ -147,7 +157,7 @@ Run-Test 'Restore from backup undoes apply' {
 Run-Test 'Restore --keep-backup retains backup dir' {
     $workK = Join-Path $tmp 'work-keep'
     Copy-Item -LiteralPath $v1 -Destination $workK -Recurse -Force
-    & $cli apply --patch $bundle.FullName --target $workK
+    & $cli apply --patch $bundle.FullName --target $workK --keep-backup
     if ($LASTEXITCODE -ne 0) { throw "apply failed" }
     & $cli restore --target $workK --keep-backup
     if ($LASTEXITCODE -ne 0) { throw "restore --keep-backup failed" }

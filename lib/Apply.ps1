@@ -3,7 +3,8 @@ function Invoke-Apply {
         [Parameter(Mandatory)][string]$PatchPath,
         [Parameter(Mandatory)][string]$Target,
         [switch]$DryRun,
-        [switch]$NoBackup
+        [switch]$NoBackup,
+        [switch]$KeepBackup
     )
 
     if (-not (Test-Path -LiteralPath $Target -PathType Container)) {
@@ -112,7 +113,12 @@ function Invoke-Apply {
 
             LogOk "Patch applied"
             if ($backupDir) {
-                LogInfo "Backup retained at: $backupDir"
+                if ($KeepBackup) {
+                    LogInfo "Backup retained at: $backupDir"
+                } else {
+                    Remove-PathSafe $backupDir
+                    LogInfo "Temporary backup cleaned up (use --keep-backup to retain it for restore)"
+                }
             }
         } catch {
             LogErr "Apply failed: $_"
