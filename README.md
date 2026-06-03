@@ -13,7 +13,33 @@ Generate a small binary patch between two extracted game versions, share it via 
 - Packs everything (`manifest.json` + `diff/` + `add/`) into a single `*.patch.zip`.
 - `apply` re-runs hashes on the target, refuses to mutate anything if the old install does not match the expected hashes, then applies each operation and verifies the resulting hashes against the manifest.
 
-## Setup (Windows)
+## Setup & Installation (Windows)
+
+### Global Installation (Recommended)
+
+To run `popayarip` from any terminal directory:
+
+1. Download the latest `popayarip-*-win64.zip` from the [GitHub Releases](https://github.com/Beast227/popayarip/releases) page.
+2. Extract the ZIP file to any directory.
+3. Open a PowerShell terminal, navigate to the extracted folder, and run:
+   ```powershell
+   .\install.ps1
+   ```
+4. Restart your terminal, and verify the installation:
+   ```powershell
+   popayarip doctor
+   ```
+
+To uninstall at any time, run:
+```powershell
+popayarip uninstall
+# or from the extracted folder:
+.\install.ps1 -Uninstall
+```
+
+### Manual Setup (Developer Mode)
+
+If you cloned the repository directly:
 
 ```powershell
 # 1. Fetch the HDiffPatch binaries into bin\
