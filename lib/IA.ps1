@@ -65,6 +65,12 @@ function Invoke-IASearch {
     if ($LASTEXITCODE -ne 0) { throw "ia search failed (exit $LASTEXITCODE)" }
 }
 
+function Test-IAItemExists {
+    param([Parameter(Mandatory)][string]$Id)
+    $res = (& ia search "identifier:$Id" 2>$null) | Out-String
+    return (-not [string]::IsNullOrWhiteSpace($res))
+}
+
 function Invoke-IAFetch {
     param(
         [Parameter(Mandatory)][string]$GameSlug,
@@ -73,21 +79,30 @@ function Invoke-IAFetch {
         [string]$OutDir = '.'
     )
     Test-IACli
-    $id = Get-IAIdentifier -Slug $GameSlug -OldVer $FromVer -NewVer $ToVer
-    if (-not (Test-Path -LiteralPath $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
-    LogInfo "Fetching $id"
-    & ia download $id --destdir=$OutDir
-    if ($LASTEXITCODE -ne 0) {
-        $clean = {
-            param($v)
-            ($v.ToLowerInvariant() -replace '[^a-z0-9.]+','-').Trim('-')
-        }
+
+    $clean = {
+        param($v)
+        ($v.ToLowerInvariant() -replace '[^a-z0-9.]+','-').Trim('-')
+    }
+
+    $id = "gpatcher-$GameSlug-$(& $clean $FromVer)-to-$(& $clean $ToVer)"
+    if ($id.Length -gt 100) { $id = $id.Substring(0,100).TrimEnd('-') }
+
+    $targetId = $id
+    if (-not (Test-IAItemExists -Id $id)) {
         $fallbackId = "popayarip-$GameSlug-$(& $clean $FromVer)-to-$(& $clean $ToVer)"
         if ($fallbackId.Length -gt 100) { $fallbackId = $fallbackId.Substring(0,100).TrimEnd('-') }
-        LogWarn "Failed to download $id. Retrying with fallback identifier: $fallbackId"
-        & ia download $fallbackId --destdir=$OutDir
-        if ($LASTEXITCODE -ne 0) {
-            throw "ia download failed for both $id and $fallbackId (exit $LASTEXITCODE)"
+        
+        if (Test-IAItemExists -Id $fallbackId) {
+            LogWarn "gpatcher release not found. Falling back to legacy release identifier: $fallbackId"
+            $targetId = $fallbackId
+        } else {
+            throw "No patch release found on archive.org for either '$id' or legacy '$fallbackId'."
         }
     }
+
+    if (-not (Test-Path -LiteralPath $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
+    LogInfo "Fetching $targetId"
+    & ia download $targetId --destdir=$OutDir
+    if ($LASTEXITCODE -ne 0) { throw "ia download failed for $targetId (exit $LASTEXITCODE)" }
 }
