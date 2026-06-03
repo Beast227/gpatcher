@@ -1,0 +1,7 @@
+bin/*.exe
+tests/tmp/
+tests/fixtures/v1/
+tests/fixtures/v2/
+*.patch.zip
+.popayarip-backup-*/
+.antigravitycli/
