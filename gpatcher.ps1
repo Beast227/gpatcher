@@ -26,6 +26,7 @@ Usage:
   gpatcher fetch   --game <slug> --from <v> --to <v> [--out <dir>]
   gpatcher verify  --install <dir> --against <manifest-or-bundle>
   gpatcher doctor
+  gpatcher uninstall
   gpatcher help
 '@
 }
@@ -208,6 +209,26 @@ try {
                 -Against (Get-RequiredFlag $parsed.Flags 'against')
         }
         'doctor' { Invoke-Doctor }
+        'uninstall' {
+            LogInfo "Uninstalling gpatcher..."
+            $dirToRemove = if ($PSScriptRoot -match 'AppData\\Local\\gpatcher') { $PSScriptRoot } else { Join-Path $env:LOCALAPPDATA 'gpatcher' }
+            
+            # Remove from PATH
+            $current = [System.Environment]::GetEnvironmentVariable('Path', 'User')
+            $entries = $current -split ';' | Where-Object { $_ -ne '' -and $_ -ne $dirToRemove }
+            $newPath = $entries -join ';'
+            [System.Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+            LogOk "Removed gpatcher from user PATH"
+
+            # Clean up files that are not currently locked
+            $libDir = Join-Path $dirToRemove 'lib'
+            $binDir = Join-Path $dirToRemove 'bin'
+            if (Test-Path $libDir) { Remove-Item $libDir -Recurse -Force -ErrorAction SilentlyContinue }
+            if (Test-Path $binDir) { Remove-Item $binDir -Recurse -Force -ErrorAction SilentlyContinue }
+
+            LogInfo "To complete uninstallation, please restart your terminal and delete the folder:"
+            Write-Host "  $dirToRemove" -ForegroundColor Yellow
+        }
         'help'   { Show-Usage }
         default  { Show-Usage; exit 1 }
     }
