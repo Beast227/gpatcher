@@ -77,5 +77,17 @@ function Invoke-IAFetch {
     if (-not (Test-Path -LiteralPath $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
     LogInfo "Fetching $id"
     & ia download $id --destdir=$OutDir
-    if ($LASTEXITCODE -ne 0) { throw "ia download failed (exit $LASTEXITCODE)" }
+    if ($LASTEXITCODE -ne 0) {
+        $clean = {
+            param($v)
+            ($v.ToLowerInvariant() -replace '[^a-z0-9.]+','-').Trim('-')
+        }
+        $fallbackId = "popayarip-$GameSlug-$(& $clean $FromVer)-to-$(& $clean $ToVer)"
+        if ($fallbackId.Length -gt 100) { $fallbackId = $fallbackId.Substring(0,100).TrimEnd('-') }
+        LogWarn "Failed to download $id. Retrying with fallback identifier: $fallbackId"
+        & ia download $fallbackId --destdir=$OutDir
+        if ($LASTEXITCODE -ne 0) {
+            throw "ia download failed for both $id and $fallbackId (exit $LASTEXITCODE)"
+        }
+    }
 }
