@@ -14,14 +14,33 @@ function Invoke-Apply {
     $staging = New-TempDir 'gpatcher-apply'
     try {
         $patchLocal = $PatchPath
+        $unpacked = $null
+        $skipUnpack = $false
+
         if ($PatchPath -match '^https?://') {
             $patchLocal = Join-Path $staging 'patch.zip'
             LogInfo "Downloading: $PatchPath"
             Invoke-WebRequest -Uri $PatchPath -OutFile $patchLocal -UseBasicParsing
+        } elseif (Test-Path -LiteralPath $PatchPath -PathType Container) {
+            if (Test-Path -LiteralPath (Join-Path $PatchPath 'manifest.json')) {
+                $unpacked = $PatchPath
+                $skipUnpack = $true
+            } else {
+                $zips = Get-ChildItem -LiteralPath $PatchPath -Filter '*.zip' -File
+                if ($zips.Count -gt 0) {
+                    $patchLocal = $zips[0].FullName
+                    LogInfo "Found patch ZIP: $($zips[0].Name)"
+                } else {
+                    throw "Patch directory does not contain 'manifest.json' or any ZIP files: $PatchPath"
+                }
+            }
         }
-        LogInfo "Unpacking patch"
-        $unpacked = Join-Path $staging 'unpack'
-        Expand-Dir -ZipPath $patchLocal -DestDir $unpacked
+
+        if (-not $skipUnpack) {
+            LogInfo "Unpacking patch"
+            $unpacked = Join-Path $staging 'unpack'
+            Expand-Dir -ZipPath $patchLocal -DestDir $unpacked
+        }
 
         $manifestPath = Join-Path $unpacked 'manifest.json'
         $m = Read-ManifestFile -Path $manifestPath
