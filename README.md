@@ -17,7 +17,13 @@ Generate a small binary patch between two extracted game versions, share it via 
 
 ### Global Installation (Recommended)
 
-To run `popayarip` from any terminal directory:
+You can install `popayarip` directly from any PowerShell terminal by running the following command:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $z = Join-Path $env:TEMP 'pop-install.zip'; $d = Join-Path $env:TEMP 'pop-install-dir'; Invoke-WebRequest -Uri 'https://github.com/Beast227/popayarip/releases/download/v0.1/popayarip-v0.1-win64.zip' -OutFile $z; Expand-Archive -Path $z -DestinationPath $d -Force; & (Join-Path $d 'install.ps1'); Remove-Item $z -Force; Remove-Item $d -Recurse -Force"
+```
+
+*Alternatively, you can install manually:*
 
 1. Download the latest `popayarip-*-win64.zip` from the [GitHub Releases](https://github.com/Beast227/popayarip/releases) page.
 2. Extract the ZIP file to any directory.
