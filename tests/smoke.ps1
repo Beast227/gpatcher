@@ -48,6 +48,8 @@ function Reset-Fixtures {
     Put-File (Join-Path $v1 'saves\save001.sav') 'save content 1'
     Put-File (Join-Path $v2 'saves\save001.sav') 'save content 2'
     Put-File (Join-Path $v2 'new\custom.bak') 'backup file'
+    Put-File (Join-Path $v1 'SaveScreenshots\shot001.png') 'screenshot content 1'
+    Put-File (Join-Path $v2 'SaveScreenshots\shot001.png') 'screenshot content 2'
 
     # binary modified
     $size = 256KB
@@ -133,6 +135,9 @@ Run-Test 'Verify exclusions in manifest' {
     }
     if ($manifestText -like '*custom.bak*') {
         throw "custom.bak was not excluded!"
+    }
+    if ($manifestText -like '*shot001.png*') {
+        throw "SaveScreenshots file was not excluded!"
     }
     Write-Host "  Success: excluded files are not present in manifest." -ForegroundColor Green
 }

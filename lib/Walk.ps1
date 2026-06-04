@@ -23,7 +23,10 @@ function Test-IsExcluded {
         
         # System junk
         'desktop\.ini$',
-        'Thumbs\.db$'
+        'Thumbs\.db$',
+        
+        # Screenshots (e.g. Phasmophobia SaveScreenshots / SavedScreenshots)
+        '(?:^|/|\\)saved?screenshots?(?:$|/|\\)'
     )
 
     $normalizedPath = $RelPath -replace '\\', '/'
