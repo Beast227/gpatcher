@@ -163,13 +163,18 @@ try {
     switch ($cmd) {
         'create' {
             $outDir = Get-OptionalFlag $parsed.Flags 'out' '.'
+            $excludes = @()
+            if ($parsed.Flags.ContainsKey('exclude')) {
+                $excludes = $parsed.Flags['exclude'] -split '[,;]' | ForEach-Object { $_.Trim() }
+            }
             $bundle = Invoke-Create `
                 -OldDir (Get-RequiredFlag $parsed.Flags 'old') `
                 -NewDir (Get-RequiredFlag $parsed.Flags 'new') `
                 -Game   (Get-RequiredFlag $parsed.Flags 'game') `
                 -OldVer (Get-RequiredFlag $parsed.Flags 'old-ver') `
                 -NewVer (Get-RequiredFlag $parsed.Flags 'new-ver') `
-                -OutDir $outDir
+                -OutDir $outDir `
+                -Exclude $excludes
             Write-Output $bundle
         }
         'apply' {

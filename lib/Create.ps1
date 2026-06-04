@@ -5,7 +5,8 @@ function Invoke-Create {
         [Parameter(Mandatory)][string]$Game,
         [Parameter(Mandatory)][string]$OldVer,
         [Parameter(Mandatory)][string]$NewVer,
-        [string]$OutDir = '.'
+        [string]$OutDir = '.',
+        [string[]]$Exclude = @()
     )
 
     foreach ($d in @($OldDir, $NewDir)) {
@@ -18,9 +19,9 @@ function Invoke-Create {
     }
 
     LogInfo "Hashing old install: $OldDir"
-    $old = Get-FileTree -Root $OldDir
+    $old = Get-FileTree -Root $OldDir -CustomExcludes $Exclude
     LogInfo "Hashing new install: $NewDir"
-    $new = Get-FileTree -Root $NewDir
+    $new = Get-FileTree -Root $NewDir -CustomExcludes $Exclude
 
     $oldMap = @{}
     foreach ($f in $old) { $oldMap[$f.RelPath] = $f }

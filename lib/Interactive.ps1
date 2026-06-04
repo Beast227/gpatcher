@@ -177,10 +177,15 @@ function Invoke-InteractiveMenu {
                 $oldDir = Read-PathInput -Prompt "Enter old game directory" -MustExist -IsDirectory
                 $newDir = Read-PathInput -Prompt "Enter new game directory" -MustExist -IsDirectory
                 $outDir = Read-TextInput -Prompt "Enter output folder for patch ZIP" -Default "."
+                $customEx = Read-TextInput -Prompt "Enter custom exclude patterns (comma-separated, e.g. Mods/*,*.bak) [Optional]"
+                $excludes = @()
+                if ($customEx) {
+                    $excludes = $customEx -split '[,;]' | ForEach-Object { $_.Trim() }
+                }
                 
                 Write-Host "`nRunning patch creation..." -ForegroundColor Yellow
                 try {
-                    $bundle = Invoke-Create -OldDir $oldDir -NewDir $newDir -Game $game -OldVer $oldVer -NewVer $newVer -OutDir $outDir
+                    $bundle = Invoke-Create -OldDir $oldDir -NewDir $newDir -Game $game -OldVer $oldVer -NewVer $newVer -OutDir $outDir -Exclude $excludes
                     LogOk "Patch bundle created: $bundle"
                 } catch {
                     LogErr $_.Exception.Message

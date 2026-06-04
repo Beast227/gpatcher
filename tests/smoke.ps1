@@ -9,6 +9,9 @@ $v1       = Join-Path $fixtures 'v1'
 $v2       = Join-Path $fixtures 'v2'
 $tmp      = Join-Path $root 'tests\tmp'
 
+. (Join-Path $root 'lib\Common.ps1')
+. (Join-Path $root 'lib\Walk.ps1')
+
 function Reset-Fixtures {
     foreach ($p in @($v1, $v2, $tmp)) {
         if (Test-Path -LiteralPath $p) { Remove-Item -LiteralPath $p -Recurse -Force }
@@ -39,6 +42,13 @@ function Reset-Fixtures {
     # deleted (v1 only)
     Put-File (Join-Path $v1 'old\removed.txt') 'goodbye'
 
+    # files that should be excluded
+    Put-File (Join-Path $v1 'data\Unity_Player.log') 'log file 1'
+    Put-File (Join-Path $v2 'data\Unity_Player.log') 'log file 2'
+    Put-File (Join-Path $v1 'saves\save001.sav') 'save content 1'
+    Put-File (Join-Path $v2 'saves\save001.sav') 'save content 2'
+    Put-File (Join-Path $v2 'new\custom.bak') 'backup file'
+
     # binary modified
     $size = 256KB
     $rand = New-Object System.Random 42
@@ -62,6 +72,9 @@ function Hash-Dir {
     try {
         foreach ($f in $files) {
             $rel = $f.FullName.Substring($full.Length).TrimStart('\','/') -replace '\\','/'
+            if (Test-IsExcluded -RelPath $rel -CustomExcludes @("*.bak")) {
+                continue
+            }
             $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash.ToLower()
             $line = "${rel}:$h`n"
             $b = [System.Text.Encoding]::UTF8.GetBytes($line)
@@ -94,8 +107,34 @@ function Run-Test {
 Run-Test 'Setup fixtures' { Reset-Fixtures }
 
 Run-Test 'Create patch' {
-    & $cli create --old $v1 --new $v2 --game 'Test Game' --old-ver '1' --new-ver '2' --out $tmp
+    & $cli create --old $v1 --new $v2 --game 'Test Game' --old-ver '1' --new-ver '2' --out $tmp --exclude "*.bak"
     if ($LASTEXITCODE -ne 0) { throw "create failed (exit $LASTEXITCODE)" }
+}
+
+Run-Test 'Verify exclusions in manifest' {
+    $bundle = Get-ChildItem -LiteralPath $tmp -Filter '*.patch.zip' | Select-Object -First 1
+    if (-not $bundle) { throw "No bundle produced in $tmp" }
+    
+    $staging = Join-Path $tmp 'manifest-check'
+    if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
+    New-Item -ItemType Directory -Path $staging -Force | Out-Null
+    
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($bundle.FullName, $staging)
+    
+    $manifestText = [System.IO.File]::ReadAllText((Join-Path $staging 'manifest.json'))
+    Remove-Item $staging -Recurse -Force
+    
+    if ($manifestText -like '*Unity_Player.log*') {
+        throw "Unity_Player.log was not excluded!"
+    }
+    if ($manifestText -like '*save001.sav*') {
+        throw "save001.sav was not excluded!"
+    }
+    if ($manifestText -like '*custom.bak*') {
+        throw "custom.bak was not excluded!"
+    }
+    Write-Host "  Success: excluded files are not present in manifest." -ForegroundColor Green
 }
 
 $bundle = Get-ChildItem -LiteralPath $tmp -Filter '*.patch.zip' | Select-Object -First 1
