@@ -392,7 +392,7 @@ function Invoke-InteractiveMenu {
                 Write-Host "`n  > Searching..." -ForegroundColor Yellow
                 try {
                     $out = & (Join-Path $PSScriptRoot 'gpatcher.ps1') search $query 2>&1
-                    $lines = $out -split "\n" | Where-Object { $_ -match 'Found: (gpatcher-\S+)' }
+                    $lines = ($out -split "`r?`n") | Where-Object { $_ -match 'Found: ((?:gpatcher|popayarip)-\S+)' }
                     
                     if ($lines.Count -eq 0) {
                         Write-Host "  [warn] No patches found for '$query'." -ForegroundColor Yellow
@@ -419,7 +419,7 @@ function Invoke-InteractiveMenu {
                         if ($null -eq $outDir) { continue }
                         Draw-BoxBottom
                         
-                        if ($selectedId -match 'gpatcher-([a-zA-Z0-9\-]+)-([a-zA-Z0-9\.\-]+)-to-([a-zA-Z0-9\.\-]+)') {
+                        if ($selectedId -match '(?:gpatcher|popayarip)-([a-zA-Z0-9\-]+)-([a-zA-Z0-9\.\-]+)-to-([a-zA-Z0-9\.\-]+)') {
                             $slug = $Matches[1]
                             $from = $Matches[2]
                             $to = $Matches[3]

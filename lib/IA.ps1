@@ -61,8 +61,18 @@ function Invoke-IASearch {
     param([Parameter(Mandatory)][string]$Query)
     Test-IACli
     $q = "(subject:gpatcher OR subject:popayarip) AND ($Query)"
-    & ia search $q --field=identifier --field=title
+    $results = & ia search $q --field=identifier --field=title 2>&1
     if ($LASTEXITCODE -ne 0) { throw "ia search failed (exit $LASTEXITCODE)" }
+    foreach ($r in $results) {
+        if ($r -match '^\s*\{') {
+            try {
+                $obj = ConvertFrom-Json $r
+                if ($obj.identifier) {
+                    Write-Output "Found: $($obj.identifier) - $($obj.title)"
+                }
+            } catch {}
+        }
+    }
 }
 
 function Test-IAItemExists {

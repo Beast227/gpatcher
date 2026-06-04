@@ -143,8 +143,7 @@ function Invoke-Verify {
         if ($bad -eq 0) {
             LogOk "Install matches expected old snapshot"
         } else {
-            LogErr "$bad file(s) differ from expected"
-            exit 1
+            throw "$bad file(s) differ from expected"
         }
     } finally {
         if ($staging) { Remove-PathSafe $staging }
