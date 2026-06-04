@@ -12,6 +12,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib\Apply.ps1')
 . (Join-Path $PSScriptRoot 'lib\Restore.ps1')
 . (Join-Path $PSScriptRoot 'lib\IA.ps1')
+. (Join-Path $PSScriptRoot 'lib\Update.ps1')
 
 function Show-Usage {
 @'
@@ -26,6 +27,7 @@ Usage:
   gpatcher fetch   --game <slug> --from <v> --to <v> [--out <dir>]
   gpatcher verify  --install <dir> --against <manifest-or-bundle>
   gpatcher doctor
+  gpatcher update  [--force]
   gpatcher uninstall
   gpatcher help
 '@
@@ -209,6 +211,9 @@ try {
                 -Against (Get-RequiredFlag $parsed.Flags 'against')
         }
         'doctor' { Invoke-Doctor }
+        'update' {
+            Invoke-Update -Force:($parsed.Flags.ContainsKey('force'))
+        }
         'uninstall' {
             LogInfo "Uninstalling gpatcher..."
             $dirToRemove = if ($PSScriptRoot -match 'AppData\\Local\\gpatcher') { $PSScriptRoot } else { Join-Path $env:LOCALAPPDATA 'gpatcher' }

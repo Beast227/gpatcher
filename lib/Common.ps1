@@ -1,6 +1,9 @@
 Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
 
+$GPATCHER_VERSION = '0.1'
+
+
 function LogInfo($msg) { Write-Host "[info]  $msg" -ForegroundColor Cyan }
 function LogWarn($msg) { Write-Host "[warn]  $msg" -ForegroundColor Yellow }
 function LogErr($msg)  { Write-Host "[err]   $msg" -ForegroundColor Red }

@@ -70,6 +70,7 @@ gpatcher search  <game-name>
 gpatcher fetch   --game <slug> --from <v> --to <v> [--out <dir>]
 gpatcher verify  --install <dir> --against <manifest-or-bundle>
 gpatcher doctor
+gpatcher update  [--force]
 ```
 
 ### Example: produce a patch

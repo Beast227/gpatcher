@@ -176,5 +176,13 @@ Run-Test 'Tampered install fails pre-flight' {
     if ($cur -ne 'tampered') { throw "Tampered file mutated despite pre-flight failure" }
 }
 
+Run-Test 'Update command in dev mode warns user' {
+    # Store standard output, error, and information output (*>&1 captures Write-Host in PS 5+)
+    $out = & $cli update *>&1 | Out-String
+    if ($out -notmatch "Running from a Git repository clone") {
+        throw "Expected Git clone warning, got: $out"
+    }
+}
+
 Write-Host "`nResults: passed=$passed failed=$failed" -ForegroundColor $(if ($failed -eq 0) { 'Green' } else { 'Red' })
 if ($failed -gt 0) { exit 1 } else { exit 0 }
