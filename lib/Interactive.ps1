@@ -17,7 +17,6 @@ function Clear-DoctorCache {
 }
 
 function Draw-Header {
-    Clear-Host
     Write-Host "  +--------------------------------------------------------+" -ForegroundColor Magenta
     Write-Host "  |   ____ ____   _  _____ ____ _   _ _____ ____           |" -ForegroundColor Magenta
     Write-Host "  |  / ___|  _ \ / \|_   _/ ___| | | | ____|  _ \          |" -ForegroundColor Magenta
@@ -75,29 +74,42 @@ function Read-MenuSelection {
 
         try {
             [Console]::CursorVisible = $false
+            Clear-Host
         } catch {}
 
+        $lastSelectedIndex = -1
+
         while ($running) {
-            Draw-Header
-            Draw-BoxTop -Title $Title
-            
-            for ($i = 0; $i -lt $Options.Count; $i++) {
-                if ($i -eq $selectedIndex) {
-                    $optText = "  >  [ $($Options[$i]) ]"
-                    $padded = $optText.PadRight(56)
-                    Write-Host "  |" -NoNewline -ForegroundColor Cyan
-                    Write-Host $padded -NoNewline -BackgroundColor DarkMagenta -ForegroundColor White
-                    Write-Host "|" -ForegroundColor Cyan
-                } else {
-                    $optText = "     [ $($Options[$i]) ]"
-                    $padded = $optText.PadRight(56)
-                    Write-Host "  |" -NoNewline -ForegroundColor Cyan
-                    Write-Host $padded -NoNewline -ForegroundColor Gray
-                    Write-Host "|" -ForegroundColor Cyan
+            if ($selectedIndex -ne $lastSelectedIndex) {
+                try {
+                    $pos = $Host.UI.RawUI.CursorPosition
+                    $pos.X = 0
+                    $pos.Y = 0
+                    $Host.UI.RawUI.CursorPosition = $pos
+                } catch {}
+
+                Draw-Header
+                Draw-BoxTop -Title $Title
+                
+                for ($i = 0; $i -lt $Options.Count; $i++) {
+                    if ($i -eq $selectedIndex) {
+                        $optText = "  >  [ $($Options[$i]) ]"
+                        $padded = $optText.PadRight(56)
+                        Write-Host "  |" -NoNewline -ForegroundColor Cyan
+                        Write-Host $padded -NoNewline -BackgroundColor DarkMagenta -ForegroundColor White
+                        Write-Host "|" -ForegroundColor Cyan
+                    } else {
+                        $optText = "     [ $($Options[$i]) ]"
+                        $padded = $optText.PadRight(56)
+                        Write-Host "  |" -NoNewline -ForegroundColor Cyan
+                        Write-Host $padded -NoNewline -ForegroundColor Gray
+                        Write-Host "|" -ForegroundColor Cyan
+                    }
                 }
+                
+                Draw-BoxBottom
+                $lastSelectedIndex = $selectedIndex
             }
-            
-            Draw-BoxBottom
 
             try {
                 $key = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
@@ -132,6 +144,7 @@ function Read-MenuSelection {
     }
 
     # Non-interactive fallback
+    try { Clear-Host } catch {}
     Draw-Header
     Draw-BoxTop -Title $Title
     for ($i = 0; $i -lt $Options.Count; $i++) {
@@ -392,7 +405,7 @@ function Invoke-InteractiveMenu {
                 Write-Host "`n  > Searching..." -ForegroundColor Yellow
                 try {
                     $out = & (Join-Path (Get-ToolRoot) 'gpatcher.ps1') search $query 2>&1
-                    $lines = ($out -split "`r?`n") | Where-Object { $_ -match 'Found: ((?:gpatcher|popayarip)-\S+)' }
+                    $lines = @(($out -split "`r?`n") | Where-Object { $_ -match 'Found: ((?:gpatcher|popayarip)-\S+)' })
                     
                     if ($lines.Count -eq 0) {
                         Write-Host "  [warn] No patches found for '$query'." -ForegroundColor Yellow
