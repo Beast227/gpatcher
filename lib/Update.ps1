@@ -3,7 +3,8 @@ function Invoke-Update {
         [switch]$Force
     )
 
-    $isGitRepo = (Test-Path (Join-Path $PSScriptRoot '.git')) -or (Test-Path (Join-Path (Split-Path $PSScriptRoot) '.git'))
+    $toolRoot = Get-ToolRoot
+    $isGitRepo = Test-Path (Join-Path $toolRoot '.git')
     if ($isGitRepo) {
         LogWarn "Running from a Git repository clone. Please use 'git pull' to update instead."
         return
@@ -84,27 +85,27 @@ function Invoke-Update {
         foreach ($f in $coreFiles) {
             $src = Join-Path $extractDir $f
             if (Test-Path -LiteralPath $src) {
-                Copy-Item -LiteralPath $src -Destination (Join-Path $PSScriptRoot $f) -Force
+                Copy-Item -LiteralPath $src -Destination (Join-Path $toolRoot $f) -Force
             }
         }
 
         # Copy install.ps1 if present
         $instSrc = Join-Path $extractDir 'install.ps1'
         if (Test-Path -LiteralPath $instSrc) {
-            Copy-Item -LiteralPath $instSrc -Destination (Join-Path $PSScriptRoot 'install.ps1') -Force
+            Copy-Item -LiteralPath $instSrc -Destination (Join-Path $toolRoot 'install.ps1') -Force
         }
 
         # Copy lib/
         $libSrc = Join-Path $extractDir 'lib'
         if (Test-Path -LiteralPath $libSrc) {
-            Copy-Item -LiteralPath $libSrc -Destination (Join-Path $PSScriptRoot 'lib') -Recurse -Force
+            Copy-Item -LiteralPath $libSrc -Destination (Join-Path $toolRoot 'lib') -Recurse -Force
         }
 
 
         # Copy bin/ (if present)
         $binSrc = Join-Path $extractDir 'bin'
         if (Test-Path -LiteralPath $binSrc) {
-            Copy-Item -LiteralPath $binSrc -Destination (Join-Path $PSScriptRoot 'bin') -Recurse -Force
+            Copy-Item -LiteralPath $binSrc -Destination (Join-Path $toolRoot 'bin') -Recurse -Force
         }
 
         LogOk "Successfully updated gpatcher to $latestTag!"
