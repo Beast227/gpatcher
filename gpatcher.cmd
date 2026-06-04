@@ -7,5 +7,6 @@ where python >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     python -m gpatcher %*
 ) else (
-    powershell.exe -ExecutionPolicy Bypass -NoProfile -File "%SCRIPT_DIR%gpatcher.ps1" %*
+    echo [err] gpatcher requires Python to run. Please install Python and ensure it is in your PATH.
+    exit /b 1
 )

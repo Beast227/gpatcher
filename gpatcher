@@ -7,6 +7,6 @@ if command -v python3 >/dev/null 2>&1; then
 elif command -v python >/dev/null 2>&1; then
     exec python -m gpatcher "$@"
 else
-    # Fallback to pwsh if python is not available
-    exec pwsh -NoProfile -ExecutionPolicy Bypass -File "$SCRIPT_DIR/gpatcher.ps1" "$@"
+    echo "[err] gpatcher requires Python to run. Please install Python and ensure it is in your PATH." >&2
+    exit 1
 fi

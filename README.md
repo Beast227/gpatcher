@@ -31,81 +31,28 @@ pip install git+https://github.com/Beast227/gpatcher.git
 ```
 Once installed, the `gpatcher` command is available globally on your machine. Run `gpatcher doctor` or `gpatcher ui` to start.
 
----
+### Internet Archive Authentication (Optional)
 
-### Legacy PowerShell Version
+To upload patches to the Internet Archive, configure your credentials:
 
-`gpatcher` legacy version requires PowerShell 5.1+ on Windows, or PowerShell Core 6.0+ (`pwsh`) on Linux/macOS.
-
-### Windows (Global Installation)
-
-Run the following command in any PowerShell window:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $z = Join-Path $env:TEMP "gpatcher-install.zip"; $d = Join-Path $env:TEMP "gpatcher-install-dir"; Invoke-WebRequest -Uri "https://github.com/Beast227/gpatcher/releases/download/v0.2/gpatcher-v0.2-win64.zip" -OutFile $z; Expand-Archive -Path $z -DestinationPath $d -Force; & (Join-Path $d "install.ps1"); Remove-Item $z -Force; Remove-Item $d -Recurse -Force'
-```
-
-### Linux / macOS (Global Installation)
-
-1. Ensure PowerShell Core (`pwsh`) is installed on your system.
-2. Download and extract the release ZIP. Navigate to the extracted folder and run:
-   ```bash
-   pwsh -File ./install.ps1
-   ```
-3. Restart your shell to refresh your PATH, then check that it runs:
-   ```bash
-   gpatcher doctor
-   ```
-
-### Manual Installation (From ZIP)
-
-1. Download the latest release from the [GitHub Releases](https://github.com/Beast227/gpatcher/releases) page.
-2. Extract the archive.
-3. Navigate to the extracted folder in your terminal and execute:
-   * **Windows**: `.\install.ps1`
-   * **Linux/macOS**: `pwsh -File ./install.ps1`
-
-To uninstall at any time, run:
-```bash
-gpatcher uninstall
-# or from the extracted folder:
-# Windows:
-.\install.ps1 -Uninstall
-# Linux/macOS:
-pwsh -File ./install.ps1 -Uninstall
-```
-
-### Internet Archive Dependencies
-
-To use any features related to the Internet Archive (**Search & Fetch**, and **Upload** operations), you need Python and the `internetarchive` CLI installed:
-
-1. Install [Python](https://www.python.org/) (ensure you select **Add Python to PATH** during setup).
-2. Install the `internetarchive` tool:
-   ```cmd
-   pip install internetarchive
-   ```
-3. *(Required only for uploading patches)* Authenticate with your Internet Archive account:
+1. Authenticate with your Internet Archive account:
    ```cmd
    ia configure
    ```
-4. Run `gpatcher doctor` to verify both Python and the `ia` CLI are correctly recognized.
-
+2. Run `gpatcher doctor` to verify setup.
 
 ### Manual Setup (Developer Mode)
 
 If you cloned the repository directly:
 
-```powershell
-# 1. Fetch the HDiffPatch binaries into bin\
-.\tools\fetch-hdiffpatch.ps1
-
-# 2. (optional, only for upload/search/fetch) install the ia CLI
-pip install internetarchive
-ia configure
-
-# 3. sanity-check
-.\gpatcher.ps1 doctor
-```
+1. Install dependencies in editable mode:
+   ```bash
+   pip install -e .
+   ```
+2. Verify the installation:
+   ```bash
+   gpatcher doctor
+   ```
 
 ## Usage
 
@@ -137,19 +84,19 @@ The dashboard provides a terminal interface with arrow key navigation to:
 
 ### Example: produce a patch
 
-```powershell
-.\gpatcher.ps1 create `
-    --old "D:\Games\Hades_v1.38290" `
-    --new "D:\Games\Hades_v1.38291" `
-    --game "Hades" --old-ver 1.38290 --new-ver 1.38291 `
+```bash
+gpatcher create \
+    --old "D:\Games\Hades_v1.38290" \
+    --new "D:\Games\Hades_v1.38291" \
+    --game "Hades" --old-ver 1.38290 --new-ver 1.38291 \
     --out  "D:\patches"
 ```
 
 ### Example: apply a patch
 
-```powershell
-.\gpatcher.ps1 apply `
-    --patch "D:\patches\hades_1.38290_to_1.38291.patch.zip" `
+```bash
+gpatcher apply \
+    --patch "D:\patches\hades_1.38290_to_1.38291.patch.zip" \
     --target "D:\Games\Hades"
 ```
 
@@ -157,15 +104,15 @@ A backup of every file the patch will mutate is written to `<target>\.gpatcher-b
 
 ### Example: undo a patch with `restore`
 
-```powershell
+```bash
 # undo the most recent apply on this install
-.\gpatcher.ps1 restore --target "D:\Games\Hades"
+gpatcher restore --target "D:\Games\Hades"
 
 # undo a specific backup (full path or name relative to target)
-.\gpatcher.ps1 restore --target "D:\Games\Hades" --backup .gpatcher-backup-20260601153012
+gpatcher restore --target "D:\Games\Hades" --backup .gpatcher-backup-20260601153012
 
 # undo but keep the backup dir around afterwards
-.\gpatcher.ps1 restore --target "D:\Games\Hades" --keep-backup
+gpatcher restore --target "D:\Games\Hades" --keep-backup
 ```
 
 `restore` walks the manifest stashed inside the backup dir, deletes files that `apply` had added, copies backed-up files back over modified/deleted ones, and verifies every restored file matches the original old-version hashes. The backup dir is removed by default after a successful restore; use `--keep-backup` to retain it.
@@ -174,28 +121,22 @@ Restore refuses to run if the target no longer matches the post-apply state reco
 
 ### Example: share via Internet Archive
 
-```powershell
-.\gpatcher.ps1 upload --patch "D:\patches\hades_1.38290_to_1.38291.patch.zip"
+```bash
+gpatcher upload --patch "D:\patches\hades_1.38290_to_1.38291.patch.zip"
 # others can then:
-.\gpatcher.ps1 search hades
-.\gpatcher.ps1 fetch --game hades --from 1.38290 --to 1.38291 --out .
+gpatcher search hades
+gpatcher fetch --game hades --from 1.38290 --to 1.38291 --out .
 ```
 
 ## Constraints
 
-- Windows-only (PowerShell 5.1+).
+- Requires Python 3.8+ (Cross-Platform).
 - Requires the matching *old* install on the consumer side. A patch from 1.0 to 1.2 does not apply to 1.1.
 - First user to publish a patch still pays a full new-version download. The savings compound only as more users with the same old version pick up the patch.
 - Symlinks / junctions inside the install dir are rejected; v0.2 does not preserve them.
 - Trust model: there is no signing. The bundle SHA-256 is published in archive.org metadata but the uploader's identity is what you ultimately trust.
 
-## Smoke test
 
-```powershell
-.\tests\smoke.ps1
-```
-
-Builds two synthetic install trees, creates a patch, applies it, hash-compares the result against the new tree, and verifies that pre-flight aborts on a tampered install.
 
 ## Manifest format (v1)
 
