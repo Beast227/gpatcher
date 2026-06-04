@@ -20,7 +20,7 @@ Generate a small binary patch between two extracted game versions, share it via 
 You can install `gpatcher` directly from any PowerShell terminal by running the following command:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $z = Join-Path $env:TEMP "gpatcher-install.zip"; $d = Join-Path $env:TEMP "gpatcher-install-dir"; Invoke-WebRequest -Uri "https://github.com/Beast227/gpatcher/releases/download/v0.1/gpatcher-v0.1-win64.zip" -OutFile $z; Expand-Archive -Path $z -DestinationPath $d -Force; & (Join-Path $d "install.ps1"); Remove-Item $z -Force; Remove-Item $d -Recurse -Force'
+powershell -NoProfile -ExecutionPolicy Bypass -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $z = Join-Path $env:TEMP "gpatcher-install.zip"; $d = Join-Path $env:TEMP "gpatcher-install-dir"; Invoke-WebRequest -Uri "https://github.com/Beast227/gpatcher/releases/download/v0.2/gpatcher-v0.2-win64.zip" -OutFile $z; Expand-Archive -Path $z -DestinationPath $d -Force; & (Join-Path $d "install.ps1"); Remove-Item $z -Force; Remove-Item $d -Recurse -Force'
 ```
 
 *Alternatively, you can install manually:*
@@ -124,7 +124,7 @@ Restore refuses to run if the target no longer matches the post-apply state reco
 - Windows-only (PowerShell 5.1+).
 - Requires the matching *old* install on the consumer side. A patch from 1.0 to 1.2 does not apply to 1.1.
 - First user to publish a patch still pays a full new-version download. The savings compound only as more users with the same old version pick up the patch.
-- Symlinks / junctions inside the install dir are rejected; v0.1 does not preserve them.
+- Symlinks / junctions inside the install dir are rejected; v0.2 does not preserve them.
 - Trust model: there is no signing. The bundle SHA-256 is published in archive.org metadata but the uploader's identity is what you ultimately trust.
 
 ## Smoke test
