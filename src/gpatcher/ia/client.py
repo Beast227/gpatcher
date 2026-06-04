@@ -54,7 +54,29 @@ def invoke_upload(bundle_path: str, creator: str = 'anonymous', description: str
 
 def invoke_search(query: str):
     """Searches the Internet Archive for gpatcher bundles matching the query."""
-    query_str = f"(subject:gpatcher OR subject:popayarip) AND ({query})"
+    terms = query.strip().split()
+    if not terms:
+        log_info("Empty search query.")
+        return
+
+    term_queries = []
+    for term in terms:
+        # Clean the term of special search punctuation except wildcard characters
+        clean_term = re.sub(r'[^\w\*\?\-]', '', term)
+        if not clean_term:
+            continue
+        if '*' not in clean_term and '?' not in clean_term:
+            # Append wildcard to the term to support prefix/partial matching
+            term_queries.append(f"{clean_term}*")
+        else:
+            term_queries.append(clean_term)
+
+    if not term_queries:
+        log_info(f"No patches found for '{query}'.")
+        return
+
+    query_part = " AND ".join(term_queries)
+    query_str = f"(subject:gpatcher OR subject:popayarip) AND ({query_part})"
     log_info(f"Searching Internet Archive...")
     try:
         results = internetarchive.search_items(query_str, fields=['identifier', 'title'])
