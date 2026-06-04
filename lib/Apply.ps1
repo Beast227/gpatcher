@@ -48,7 +48,14 @@ function Invoke-Apply {
 
         LogInfo "Pre-flight: verifying old install"
         $mismatch = New-Object System.Collections.Generic.List[string]
+        $totalVerify = $m.ops.Count
+        $vIdx = 0
         foreach ($op in $m.ops) {
+            $vIdx++
+            if ($vIdx % 25 -eq 0 -or $vIdx -eq $totalVerify) {
+                $pct = if ($totalVerify -gt 0) { ($vIdx / $totalVerify) * 100 } else { 100 }
+                Write-Progress -Activity "Pre-flight: verifying old install" -Status "Checking: $($op.path) ($vIdx/$totalVerify)" -PercentComplete $pct
+            }
             $p = Join-Path $Target (ConvertTo-NativePath $op.path)
             $exists = Test-Path -LiteralPath $p
             if ($op.op -eq 'add') { continue }
@@ -68,6 +75,7 @@ function Invoke-Apply {
                 }
             }
         }
+        Write-Progress -Activity "Pre-flight: verifying old install" -Completed
         if ($mismatch.Count -gt 0) {
             LogErr "Pre-flight failed:"
             $mismatch | ForEach-Object { LogErr "  $_" }
@@ -85,21 +93,33 @@ function Invoke-Apply {
             $backupDir = Join-Path $Target ".gpatcher-backup-$([DateTime]::UtcNow.ToString('yyyyMMddHHmmss'))"
             New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
             LogInfo "Backup: $backupDir"
-            foreach ($op in $m.ops) {
-                if ($op.op -eq 'diff' -or $op.op -eq 'delete') {
-                    $src = Join-Path $Target (ConvertTo-NativePath $op.path)
-                    $dst = Join-Path $backupDir (ConvertTo-NativePath $op.path)
-                    New-Item -ItemType Directory -Path (Split-Path -Parent $dst) -Force | Out-Null
-                    Copy-Item -LiteralPath $src -Destination $dst -Force
-                }
+            $backupOps = @($m.ops | Where-Object { $_.op -eq 'diff' -or $_.op -eq 'delete' })
+            $totalBackup = $backupOps.Count
+            $bIdx = 0
+            foreach ($op in $backupOps) {
+                $bIdx++
+                $pct = if ($totalBackup -gt 0) { ($bIdx / $totalBackup) * 100 } else { 100 }
+                Write-Progress -Activity "Creating backup" -Status "Backing up: $($op.path) ($bIdx/$totalBackup)" -PercentComplete $pct
+                
+                $src = Join-Path $Target (ConvertTo-NativePath $op.path)
+                $dst = Join-Path $backupDir (ConvertTo-NativePath $op.path)
+                New-Item -ItemType Directory -Path (Split-Path -Parent $dst) -Force | Out-Null
+                Copy-Item -LiteralPath $src -Destination $dst -Force
             }
+            Write-Progress -Activity "Creating backup" -Completed
             # Stash a copy of the manifest inside the backup so `restore` can
             # also undo `add` ops (which leave no backed-up file behind).
             Write-ManifestFile -Manifest $m -Path (Join-Path $backupDir '.gpatcher-manifest.json')
         }
 
         try {
+            $totalOps = $m.ops.Count
+            $idx = 0
             foreach ($op in $m.ops) {
+                $idx++
+                $pct = if ($totalOps -gt 0) { ($idx / $totalOps) * 100 } else { 100 }
+                Write-Progress -Activity "Applying patch" -Status "Processing: $($op.path) ($idx/$totalOps)" -PercentComplete $pct
+                
                 $tgt = Join-Path $Target (ConvertTo-NativePath $op.path)
                 switch ($op.op) {
                     'diff' {
@@ -129,6 +149,7 @@ function Invoke-Apply {
                     'keep' { }
                 }
             }
+            Write-Progress -Activity "Applying patch" -Completed
 
             LogOk "Patch applied"
             if ($backupDir) {
@@ -154,6 +175,9 @@ function Invoke-Apply {
             throw
         }
     } finally {
+        Write-Progress -Activity "Pre-flight: verifying old install" -Completed
+        Write-Progress -Activity "Creating backup" -Completed
+        Write-Progress -Activity "Applying patch" -Completed
         Remove-PathSafe $staging
     }
 }
