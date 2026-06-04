@@ -73,6 +73,10 @@ function Read-MenuSelection {
         $selectedIndex = 0
         $running = $true
 
+        try {
+            [Console]::CursorVisible = $false
+        } catch {}
+
         while ($running) {
             Draw-Header
             Draw-BoxTop -Title $Title
@@ -107,12 +111,21 @@ function Read-MenuSelection {
                     13 { # Enter
                         $running = $false
                     }
+                    27 { # Escape
+                        $selectedIndex = -1
+                        $running = $false
+                    }
                 }
             } catch {
                 $interactive = $false
                 $running = $false
             }
         }
+
+        try {
+            [Console]::CursorVisible = $true
+        } catch {}
+
         if ($interactive) {
             return $selectedIndex
         }
@@ -132,8 +145,11 @@ function Read-MenuSelection {
     $valid = $false
     $choice = 0
     while (-not $valid) {
-        Write-Host "  > Enter option (1-$($Options.Count)): " -NoNewline -ForegroundColor Cyan
+        Write-Host "  > Enter option (1-$($Options.Count)) or 'q' to go back: " -NoNewline -ForegroundColor Cyan
         $val = Read-Host
+        if ($val -eq 'q') {
+            return -1
+        }
         if ($val -match '^\d+$') {
             $num = [int]$val
             if ($num -ge 1 -and $num -le $Options.Count) {
@@ -148,16 +164,77 @@ function Read-MenuSelection {
     return $choice
 }
 
+function Read-CustomInput {
+    param(
+        [string]$Prompt,
+        [string]$Default = ""
+    )
+    $display = if ($Default) { "  | > ${Prompt} [${Default}]: " } else { "  | > ${Prompt}: " }
+    Write-Host $display -NoNewline -ForegroundColor Cyan
+
+    $interactive = $true
+    try {
+        $null = $Host.UI.RawUI.KeyAvailable
+    } catch {
+        $interactive = $false
+    }
+
+    if (-not $interactive) {
+        $val = Read-Host
+        if (-not $val) { $val = $Default }
+        if ($val -eq 'q' -or $val -eq 'back') { return $null }
+        return $val
+    }
+
+    # Interactive character-by-character reading to support Escape key
+    $inputStr = ""
+    try {
+        [Console]::CursorVisible = $true
+    } catch {}
+
+    while ($true) {
+        try {
+            $key = [System.Console]::ReadKey($true)
+        } catch {
+            # Fallback if ReadKey fails
+            $val = Read-Host
+            if (-not $val) { $val = $Default }
+            if ($val -eq 'q' -or $val -eq 'back') { return $null }
+            return $val
+        }
+
+        if ($key.Key -eq [System.ConsoleKey]::Enter) {
+            Write-Host ""
+            if (-not $inputStr -and $Default) {
+                return $Default
+            }
+            return $inputStr
+        }
+        elseif ($key.Key -eq [System.ConsoleKey]::Escape) {
+            Write-Host " (cancelled)" -ForegroundColor Yellow
+            return $null # indicates Escape/Back
+        }
+        elseif ($key.Key -eq [System.ConsoleKey]::Backspace) {
+            if ($inputStr.Length -gt 0) {
+                $inputStr = $inputStr.Substring(0, $inputStr.Length - 1)
+                Write-Host "`b `b" -NoNewline
+            }
+        }
+        else {
+            if ($key.KeyChar -ge 32 -and $key.KeyChar -le 126) {
+                $inputStr += $key.KeyChar
+                Write-Host $key.KeyChar -NoNewline
+            }
+        }
+    }
+}
+
 function Read-TextInput {
     param(
         [Parameter(Mandatory)][string]$Prompt,
         [string]$Default = ""
     )
-    $display = if ($Default) { "  | > ${Prompt} [${Default}]: " } else { "  | > ${Prompt}: " }
-    Write-Host $display -NoNewline -ForegroundColor Cyan
-    $val = Read-Host
-    if (-not $val) { $val = $Default }
-    $val
+    return Read-CustomInput -Prompt $Prompt -Default $Default
 }
 
 function Read-PathInput {
@@ -169,8 +246,10 @@ function Read-PathInput {
     $valid = $false
     $resolved = ""
     while (-not $valid) {
-        Write-Host "  | > ${Prompt}: " -NoNewline -ForegroundColor Cyan
-        $val = Read-Host
+        $val = Read-CustomInput -Prompt $Prompt
+        if ($null -eq $val) {
+            return $null # User pressed Escape
+        }
         if (-not $val) {
             Write-Host "  |   [err] Path cannot be empty!" -ForegroundColor Red
             continue
@@ -203,6 +282,7 @@ function Read-ConfirmChoice {
     )
     $opt = if ($Default) { "(Y/n)" } else { "(y/N)" }
     $choice = Read-MenuSelection -Title "$Prompt $opt" -Options @("Yes", "No")
+    if ($choice -eq -1) { return $null }
     return ($choice -eq 0)
 }
 
@@ -221,6 +301,11 @@ function Invoke-InteractiveMenu {
     $running = $true
     while ($running) {
         $selection = Read-MenuSelection -Title "Select Operation" -Options $menuOptions
+        if ($selection -eq -1) {
+            $running = $false
+            Write-Host "  > Goodbye!" -ForegroundColor Green
+            break
+        }
         
         Clear-Host
         Draw-Header
@@ -230,12 +315,17 @@ function Invoke-InteractiveMenu {
             0 { # Apply Patch
                 Draw-BoxTop -Title "Apply Game Patch"
                 $patch = Read-TextInput -Prompt "Enter local patch ZIP path or URL"
+                if ($null -eq $patch) { continue }
                 $target = Read-PathInput -Prompt "Enter target game directory" -MustExist -IsDirectory
+                if ($null -eq $target) { continue }
                 Draw-BoxBottom
                 
                 $dryRun = Read-ConfirmChoice -Prompt "Run as Dry Run (no file changes)?" -Default $false
+                if ($null -eq $dryRun) { continue }
                 $noBackup = Read-ConfirmChoice -Prompt "Disable backup generation?" -Default $false
+                if ($null -eq $noBackup) { continue }
                 $keepBackup = Read-ConfirmChoice -Prompt "Keep backup directory after successful apply?" -Default $true
+                if ($null -eq $keepBackup) { continue }
                 
                 Write-Host "`n  > Running apply operation..." -ForegroundColor Yellow
                 try {
@@ -247,12 +337,19 @@ function Invoke-InteractiveMenu {
             1 { # Create Patch
                 Draw-BoxTop -Title "Create Game Patch"
                 $game = Read-TextInput -Prompt "Enter game title (e.g. Hades)"
+                if ($null -eq $game) { continue }
                 $oldVer = Read-TextInput -Prompt "Enter old version"
+                if ($null -eq $oldVer) { continue }
                 $newVer = Read-TextInput -Prompt "Enter new version"
+                if ($null -eq $newVer) { continue }
                 $oldDir = Read-PathInput -Prompt "Enter old game directory" -MustExist -IsDirectory
+                if ($null -eq $oldDir) { continue }
                 $newDir = Read-PathInput -Prompt "Enter new game directory" -MustExist -IsDirectory
+                if ($null -eq $newDir) { continue }
                 $outDir = Read-TextInput -Prompt "Enter output folder" -Default "."
+                if ($null -eq $outDir) { continue }
                 $customEx = Read-TextInput -Prompt "Custom excludes (e.g. Mods/*,*.bak) [Optional]"
+                if ($null -eq $customEx) { continue }
                 Draw-BoxBottom
 
                 $excludes = @()
@@ -271,10 +368,13 @@ function Invoke-InteractiveMenu {
             2 { # Restore Backup
                 Draw-BoxTop -Title "Restore Patch Backup"
                 $target = Read-PathInput -Prompt "Enter target game directory" -MustExist -IsDirectory
+                if ($null -eq $target) { continue }
                 $backup = Read-TextInput -Prompt "Enter backup name" -Default "latest"
+                if ($null -eq $backup) { continue }
                 Draw-BoxBottom
 
                 $keepBackup = Read-ConfirmChoice -Prompt "Keep backup folder after restore completes?" -Default $false
+                if ($null -eq $keepBackup) { continue }
                 
                 Write-Host "`n  > Restoring backup..." -ForegroundColor Yellow
                 try {
@@ -286,6 +386,7 @@ function Invoke-InteractiveMenu {
             3 { # Search & Fetch Patch
                 Draw-BoxTop -Title "Search Internet Archive"
                 $query = Read-TextInput -Prompt "Enter game title to search"
+                if ($null -eq $query) { continue }
                 Draw-BoxBottom
 
                 Write-Host "`n  > Searching..." -ForegroundColor Yellow
@@ -308,21 +409,24 @@ function Invoke-InteractiveMenu {
                         $options += "Cancel"
                         
                         $selectIdx = Read-MenuSelection -Title "Select Patch to Fetch" -Options $options
-                        if ($selectIdx -lt $identifiers.Count) {
-                            $selectedId = $identifiers[$selectIdx]
-                            Draw-BoxTop -Title "Fetch Selected Patch"
-                            $outDir = Read-TextInput -Prompt "Enter output folder" -Default "."
-                            Draw-BoxBottom
-                            
-                            if ($selectedId -match 'gpatcher-([a-zA-Z0-9\-]+)-([a-zA-Z0-9\.\-]+)-to-([a-zA-Z0-9\.\-]+)') {
-                                $slug = $Matches[1]
-                                $from = $Matches[2]
-                                $to = $Matches[3]
-                                Write-Host "`n  > Fetching patch $selectedId..." -ForegroundColor Yellow
-                                Invoke-IAFetch -GameSlug $slug -FromVer $from -ToVer $to -OutDir $outDir
-                            } else {
-                                Write-Host "  [err] Invalid patch identifier format: $selectedId" -ForegroundColor Red
-                            }
+                        if ($selectIdx -eq -1 -or $selectIdx -ge $identifiers.Count) {
+                            continue
+                        }
+                        
+                        $selectedId = $identifiers[$selectIdx]
+                        Draw-BoxTop -Title "Fetch Selected Patch"
+                        $outDir = Read-TextInput -Prompt "Enter output folder" -Default "."
+                        if ($null -eq $outDir) { continue }
+                        Draw-BoxBottom
+                        
+                        if ($selectedId -match 'gpatcher-([a-zA-Z0-9\-]+)-([a-zA-Z0-9\.\-]+)-to-([a-zA-Z0-9\.\-]+)') {
+                            $slug = $Matches[1]
+                            $from = $Matches[2]
+                            $to = $Matches[3]
+                            Write-Host "`n  > Fetching patch $selectedId..." -ForegroundColor Yellow
+                            Invoke-IAFetch -GameSlug $slug -FromVer $from -ToVer $to -OutDir $outDir
+                        } else {
+                            Write-Host "  [err] Invalid patch identifier format: $selectedId" -ForegroundColor Red
                         }
                     }
                 } catch {
@@ -332,7 +436,9 @@ function Invoke-InteractiveMenu {
             4 { # Verify Installation
                 Draw-BoxTop -Title "Verify Installation"
                 $install = Read-PathInput -Prompt "Enter install directory" -MustExist -IsDirectory
+                if ($null -eq $install) { continue }
                 $against = Read-PathInput -Prompt "Enter manifest.json or patch ZIP path" -MustExist
+                if ($null -eq $against) { continue }
                 Draw-BoxBottom
                 
                 Write-Host "`n  > Verifying installation..." -ForegroundColor Yellow
@@ -350,6 +456,7 @@ function Invoke-InteractiveMenu {
             }
             6 { # Check for updates
                 $force = Read-ConfirmChoice -Prompt "Force update check/re-install?" -Default $false
+                if ($null -eq $force) { continue }
                 Write-Host "`n  > Checking for updates..." -ForegroundColor Yellow
                 try {
                     Invoke-Update -Force:$force
