@@ -244,6 +244,7 @@ try {
         'help'   { Show-Usage }
         default  { Show-Usage; exit 1 }
     }
+    exit 0
 } catch {
     LogErr $_.Exception.Message
     exit 1

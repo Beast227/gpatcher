@@ -220,6 +220,24 @@ Run-Test 'Tampered install fails pre-flight' {
     if ($cur -ne 'tampered') { throw "Tampered file mutated despite pre-flight failure" }
 }
 
+Run-Test 'Verify matches expected old snapshot' {
+    & $cli verify --install $v1 --against $bundle.FullName
+    if ($LASTEXITCODE -ne 0) { throw "verify should have succeeded (exit $LASTEXITCODE)" }
+}
+
+Run-Test 'Verify fails when modified' {
+    $workV = Join-Path $tmp 'work-verify-fail'
+    if (Test-Path $workV) { Remove-Item $workV -Recurse -Force }
+    Copy-Item -LiteralPath $v1 -Destination $workV -Recurse -Force
+    [System.IO.File]::WriteAllText((Join-Path $workV 'static.txt'), 'tampered', [System.Text.UTF8Encoding]::new($false))
+    
+    $out = & $cli verify --install $workV --against $bundle.FullName *>&1 | Out-String
+    if ($LASTEXITCODE -eq 0) { throw "verify on tampered install should have failed" }
+    if ($out -notmatch "1 file\(s\) differ from expected") {
+        throw "Expected error output about 1 file differing, got: $out"
+    }
+}
+
 Run-Test 'Update command in dev mode warns user' {
     # Store standard output, error, and information output (*>&1 captures Write-Host in PS 5+)
     $out = & $cli update *>&1 | Out-String
