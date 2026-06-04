@@ -74,15 +74,17 @@ function Get-OptionalFlag {
 
 function Invoke-Doctor {
     LogInfo "gpatcher doctor"
-    $hdiffz  = Get-BinPath 'hdiffz.exe'
-    $hpatchz = Get-BinPath 'hpatchz.exe'
+    $binExt = if (Test-IsWindows) { '.exe' } else { '' }
+    $hdiffz  = Get-BinPath "hdiffz$binExt"
+    $hpatchz = Get-BinPath "hpatchz$binExt"
     foreach ($e in @($hdiffz, $hpatchz)) {
         $leaf = Split-Path $e -Leaf
         if (Test-Path -LiteralPath $e) {
             $sz = (Get-Item -LiteralPath $e).Length
             LogOk "  ${leaf}: $(Format-Bytes $sz)"
         } else {
-            LogErr "  ${leaf}: MISSING -- run tools\fetch-hdiffpatch.ps1"
+            $script = if (Test-IsWindows) { "tools\fetch-hdiffpatch.ps1" } else { "tools/fetch-hdiffpatch.ps1" }
+            LogErr "  ${leaf}: MISSING -- run $script"
         }
     }
     if (Test-CommandExists 'python') {
@@ -223,14 +225,37 @@ try {
         }
         'uninstall' {
             LogInfo "Uninstalling gpatcher..."
-            $dirToRemove = if ($PSScriptRoot -match 'AppData\\Local\\gpatcher') { $PSScriptRoot } else { Join-Path $env:LOCALAPPDATA 'gpatcher' }
+            $dirToRemove = if ($PSScriptRoot -match 'AppData\\Local\\gpatcher' -or $PSScriptRoot -match '\.gpatcher') {
+                $PSScriptRoot
+            } else {
+                if (Test-IsWindows) { Join-Path $env:LOCALAPPDATA 'gpatcher' } else { Join-Path $HOME '.gpatcher' }
+            }
             
             # Remove from PATH
-            $current = [System.Environment]::GetEnvironmentVariable('Path', 'User')
-            $entries = $current -split ';' | Where-Object { $_ -ne '' -and $_ -ne $dirToRemove }
-            $newPath = $entries -join ';'
-            [System.Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
-            LogOk "Removed gpatcher from user PATH"
+            if (Test-IsWindows) {
+                $current = [System.Environment]::GetEnvironmentVariable('Path', 'User')
+                $entries = $current -split ';' | Where-Object { $_ -ne '' -and $_ -ne $dirToRemove }
+                $newPath = $entries -join ';'
+                [System.Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+                LogOk "Removed gpatcher from user PATH"
+            } else {
+                $rcFiles = @()
+                $homeDir = $HOME
+                $bashrc = Join-Path $homeDir '.bashrc'
+                $zshrc = Join-Path $homeDir '.zshrc'
+                $profile = Join-Path $homeDir '.profile'
+                if (Test-Path -LiteralPath $bashrc) { $rcFiles += $bashrc }
+                if (Test-Path -LiteralPath $zshrc) { $rcFiles += $zshrc }
+                if (Test-Path -LiteralPath $profile) { $rcFiles += $profile }
+                foreach ($rc in $rcFiles) {
+                    if (Test-Path -LiteralPath $rc) {
+                        $lines = Get-Content -LiteralPath $rc
+                        $filtered = $lines | Where-Object { $_ -notlike "*$dirToRemove*" }
+                        [System.IO.File]::WriteAllLines($rc, $filtered)
+                    }
+                }
+                LogOk "Removed gpatcher export from shell rc files"
+            }
 
             # Clean up files that are not currently locked
             $libDir = Join-Path $dirToRemove 'lib'

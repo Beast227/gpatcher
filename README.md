@@ -13,34 +13,46 @@ Generate a small binary patch between two extracted game versions, share it via 
 - Packs everything (`manifest.json` + `diff/` + `add/`) into a single `*.patch.zip`.
 - `apply` re-runs hashes on the target, refuses to mutate anything if the old install does not match the expected hashes, then applies each operation and verifies the resulting hashes against the manifest.
 
-## Setup & Installation (Windows)
+## Setup & Installation
 
-### Global Installation (Recommended)
+`gpatcher` requires PowerShell 5.1+ on Windows, or PowerShell Core 6.0+ (`pwsh`) on Linux/macOS.
 
-You can install `gpatcher` directly from any PowerShell terminal by running the following command:
+### Windows (Global Installation)
+
+Run the following command in any PowerShell window:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $z = Join-Path $env:TEMP "gpatcher-install.zip"; $d = Join-Path $env:TEMP "gpatcher-install-dir"; Invoke-WebRequest -Uri "https://github.com/Beast227/gpatcher/releases/download/v0.2/gpatcher-v0.2-win64.zip" -OutFile $z; Expand-Archive -Path $z -DestinationPath $d -Force; & (Join-Path $d "install.ps1"); Remove-Item $z -Force; Remove-Item $d -Recurse -Force'
 ```
 
-*Alternatively, you can install manually:*
+### Linux / macOS (Global Installation)
 
-1. Download the latest `gpatcher-*-win64.zip` from the [GitHub Releases](https://github.com/Beast227/gpatcher/releases) page.
-2. Extract the ZIP file to any directory.
-3. Open a PowerShell terminal, navigate to the extracted folder, and run:
-   ```powershell
-   .\install.ps1
+1. Ensure PowerShell Core (`pwsh`) is installed on your system.
+2. Download and extract the release ZIP. Navigate to the extracted folder and run:
+   ```bash
+   pwsh -File ./install.ps1
    ```
-4. Restart your terminal, and verify the installation:
-   ```powershell
+3. Restart your shell to refresh your PATH, then check that it runs:
+   ```bash
    gpatcher doctor
    ```
 
+### Manual Installation (From ZIP)
+
+1. Download the latest release from the [GitHub Releases](https://github.com/Beast227/gpatcher/releases) page.
+2. Extract the archive.
+3. Navigate to the extracted folder in your terminal and execute:
+   * **Windows**: `.\install.ps1`
+   * **Linux/macOS**: `pwsh -File ./install.ps1`
+
 To uninstall at any time, run:
-```powershell
+```bash
 gpatcher uninstall
 # or from the extracted folder:
+# Windows:
 .\install.ps1 -Uninstall
+# Linux/macOS:
+pwsh -File ./install.ps1 -Uninstall
 ```
 
 ### Internet Archive Dependencies

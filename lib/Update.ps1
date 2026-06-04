@@ -55,12 +55,12 @@ function Invoke-Update {
 
     LogInfo "Updating gpatcher from v$global:GPATCHER_VERSION to $latestTag..."
 
+    $pattern = if (Test-IsWindows) { 'win.*64' } else { 'linux.*64' }
     $asset = $rel.assets | Where-Object {
-        $_.name -match 'win.*64' -and $_.name -like '*.zip'
+        $_.name -match $pattern -and $_.name -like '*.zip'
     } | Select-Object -First 1
 
     if (-not $asset) {
-        # Fallback to any ZIP asset if win64 isn't explicitly in the name
         $asset = $rel.assets | Where-Object { $_.name -like '*.zip' } | Select-Object -First 1
     }
 
@@ -81,11 +81,22 @@ function Invoke-Update {
 
         LogInfo "Applying update..."
         # Copy core files
-        $coreFiles = @('gpatcher.ps1', 'gpatcher.cmd')
+        $coreFiles = New-Object System.Collections.Generic.List[string]
+        $coreFiles.Add('gpatcher.ps1')
+        if (Test-IsWindows) {
+            $coreFiles.Add('gpatcher.cmd')
+        } else {
+            $coreFiles.Add('gpatcher')
+        }
+        
         foreach ($f in $coreFiles) {
             $src = Join-Path $extractDir $f
             if (Test-Path -LiteralPath $src) {
-                Copy-Item -LiteralPath $src -Destination (Join-Path $toolRoot $f) -Force
+                $dst = Join-Path $toolRoot $f
+                Copy-Item -LiteralPath $src -Destination $dst -Force
+                if ($f -eq 'gpatcher' -and -not (Test-IsWindows)) {
+                    & chmod +x $dst 2>$null
+                }
             }
         }
 
@@ -113,6 +124,11 @@ function Invoke-Update {
                 New-Item -ItemType Directory -Path $binDst -Force | Out-Null
             }
             Copy-Item -Path (Join-Path $binSrc '*') -Destination $binDst -Recurse -Force
+            if (-not (Test-IsWindows)) {
+                Get-ChildItem -Path $binDst -File | ForEach-Object {
+                    & chmod +x $_.FullName 2>$null
+                }
+            }
         }
 
         LogOk "Successfully updated gpatcher to $latestTag!"

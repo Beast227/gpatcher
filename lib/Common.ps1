@@ -4,6 +4,14 @@ $ErrorActionPreference = 'Stop'
 $global:GPATCHER_VERSION = '0.2'
 $global:DoctorStatusCache = $null
 
+function Test-IsWindows {
+    if ($null -ne (Get-Variable 'IsWindows' -ErrorAction SilentlyContinue)) {
+        return $IsWindows
+    }
+    return $true
+}
+
+
 
 function LogInfo($msg) { Write-Host "[info]  $msg" -ForegroundColor Cyan }
 function LogWarn($msg) { Write-Host "[warn]  $msg" -ForegroundColor Yellow }

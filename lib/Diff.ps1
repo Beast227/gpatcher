@@ -4,9 +4,13 @@ function Invoke-HDiffz {
         [Parameter(Mandatory)][string]$NewFile,
         [Parameter(Mandatory)][string]$PatchOut
     )
-    $exe = Get-BinPath 'hdiffz.exe'
+    $binName = if (Test-IsWindows) { 'hdiffz.exe' } else { 'hdiffz' }
+    $exe = Get-BinPath $binName
     if (-not (Test-Path -LiteralPath $exe)) {
-        throw "hdiffz.exe not found at $exe. Run tools\fetch-hdiffpatch.ps1."
+        throw "$binName not found at $exe. Run tools/fetch-hdiffpatch.ps1."
+    }
+    if (-not (Test-IsWindows)) {
+        & chmod +x $exe 2>$null
     }
     & $exe -f $OldFile $NewFile $PatchOut 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
@@ -20,9 +24,13 @@ function Invoke-HPatchz {
         [Parameter(Mandatory)][string]$PatchFile,
         [Parameter(Mandatory)][string]$NewOut
     )
-    $exe = Get-BinPath 'hpatchz.exe'
+    $binName = if (Test-IsWindows) { 'hpatchz.exe' } else { 'hpatchz' }
+    $exe = Get-BinPath $binName
     if (-not (Test-Path -LiteralPath $exe)) {
-        throw "hpatchz.exe not found at $exe. Run tools\fetch-hdiffpatch.ps1."
+        throw "$binName not found at $exe. Run tools/fetch-hdiffpatch.ps1."
+    }
+    if (-not (Test-IsWindows)) {
+        & chmod +x $exe 2>$null
     }
     & $exe -f $OldFile $PatchFile $NewOut 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
