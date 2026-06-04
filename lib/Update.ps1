@@ -98,14 +98,21 @@ function Invoke-Update {
         # Copy lib/
         $libSrc = Join-Path $extractDir 'lib'
         if (Test-Path -LiteralPath $libSrc) {
-            Copy-Item -LiteralPath $libSrc -Destination (Join-Path $toolRoot 'lib') -Recurse -Force
+            $libDst = Join-Path $toolRoot 'lib'
+            if (-not (Test-Path -LiteralPath $libDst)) {
+                New-Item -ItemType Directory -Path $libDst -Force | Out-Null
+            }
+            Copy-Item -Path (Join-Path $libSrc '*') -Destination $libDst -Recurse -Force
         }
-
 
         # Copy bin/ (if present)
         $binSrc = Join-Path $extractDir 'bin'
         if (Test-Path -LiteralPath $binSrc) {
-            Copy-Item -LiteralPath $binSrc -Destination (Join-Path $toolRoot 'bin') -Recurse -Force
+            $binDst = Join-Path $toolRoot 'bin'
+            if (-not (Test-Path -LiteralPath $binDst)) {
+                New-Item -ItemType Directory -Path $binDst -Force | Out-Null
+            }
+            Copy-Item -Path (Join-Path $binSrc '*') -Destination $binDst -Recurse -Force
         }
 
         LogOk "Successfully updated gpatcher to $latestTag!"
