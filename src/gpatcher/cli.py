@@ -7,6 +7,7 @@ from gpatcher.core.apply import invoke_apply
 from gpatcher.core.restore import invoke_restore
 from gpatcher.core.verify import invoke_verify
 from gpatcher.core.doctor import invoke_doctor
+from gpatcher.core.update import invoke_update
 from gpatcher.ia.client import invoke_upload, invoke_search, invoke_fetch
 from gpatcher.tui import invoke_interactive_menu
 
@@ -71,6 +72,10 @@ def main(args=None):
     verify_parser = subparsers.add_parser("verify", help="Verifies that an install directory matches a snapshot")
     verify_parser.add_argument("--install", required=True, help="Directory to verify")
     verify_parser.add_argument("--against", required=True, help="Path to manifest.json or patch ZIP")
+
+    # update
+    update_parser = subparsers.add_parser("update", help="Update gpatcher to the latest release version")
+    update_parser.add_argument("--force", action="store_true", help="Force reinstall of the latest version even if up-to-date")
 
     # doctor
     subparsers.add_parser("doctor", help="Performs system diagnostics check on dependencies")
@@ -141,6 +146,8 @@ def main(args=None):
             )
         elif parsed_args.command == "doctor":
             invoke_doctor()
+        elif parsed_args.command == "update":
+            invoke_update(force=parsed_args.force)
         elif parsed_args.command == "ui":
             invoke_interactive_menu()
         else:

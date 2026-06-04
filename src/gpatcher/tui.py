@@ -350,13 +350,14 @@ def invoke_interactive_menu():
         "Verify an installation",
         "System diagnostics check (doctor)",
         "Check / Fetch tools (fetch)",
+        "Check / Install gpatcher updates (update)",
         "Exit"
     ]
 
     running = True
     while running:
         selection = read_menu_selection("Select Operation", menu_options)
-        if selection == -1 or selection == 7:
+        if selection == -1 or selection == 8:
             running = False
             print(f"  {Colors.GREEN}> Goodbye!{Colors.RESET}")
             break
@@ -525,6 +526,18 @@ def invoke_interactive_menu():
                 fetch_hdiffpatch()
             except Exception as e:
                 log_err(f"Fetch failed: {e}")
+
+        elif selection == 7:  # Check / Install gpatcher updates
+            draw_box_top("Check for updates")
+            draw_box_bottom()
+            force = read_confirm_choice("Force update check/re-install?", default=False)
+            if force is not None:
+                print(f"\n  {Colors.YELLOW}> Checking for updates...{Colors.RESET}")
+                try:
+                    from gpatcher.core.update import invoke_update
+                    invoke_update(force=force)
+                except Exception as e:
+                    log_err(f"Update failed: {e}")
 
         if running:
             sys.stdout.write(f"\n  {Colors.GRAY}Press Enter to return to main menu...{Colors.RESET}")
