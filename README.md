@@ -23,7 +23,7 @@ The Python version runs on Windows, macOS, and any Linux distribution. It has au
 
 #### One-Line Installation (Directly from Release):
 ```bash
-pip install https://github.com/Beast227/gpatcher/releases/download/v0.3.0/gpatcher-0.3.0-py3-none-any.whl
+pip install https://github.com/Beast227/gpatcher/releases/download/v0.3.1/gpatcher-0.3.1-py3-none-any.whl
 ```
 Or install the latest development code directly from GitHub:
 ```bash
