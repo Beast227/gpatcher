@@ -15,7 +15,23 @@ Generate a small binary patch between two extracted game versions, share it via 
 
 ## Setup & Installation
 
-`gpatcher` requires PowerShell 5.1+ on Windows, or PowerShell Core 6.0+ (`pwsh`) on Linux/macOS.
+`gpatcher` is available in both Python (cross-platform, recommended) and legacy PowerShell versions.
+
+### Python Version (Recommended, Cross-Platform)
+
+The Python version runs on Windows, macOS, and any Linux distribution. It has automated native binary retrieval and handles Python dependencies seamlessly.
+
+#### One-Line Installation (Directly from GitHub):
+```bash
+pip install git+https://github.com/Beast227/gpatcher.git@feature/python-port
+```
+Once installed, the `gpatcher` command is available globally on your machine. Run `gpatcher doctor` or `gpatcher ui` to start.
+
+---
+
+### Legacy PowerShell Version
+
+`gpatcher` legacy version requires PowerShell 5.1+ on Windows, or PowerShell Core 6.0+ (`pwsh`) on Linux/macOS.
 
 ### Windows (Global Installation)
 
