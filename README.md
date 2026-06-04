@@ -43,6 +43,22 @@ gpatcher uninstall
 .\install.ps1 -Uninstall
 ```
 
+### Internet Archive Dependencies (Optional)
+
+To use any features related to the Internet Archive (**Search & Fetch**, and **Upload** operations), you need Python and the `internetarchive` CLI installed:
+
+1. Install [Python](https://www.python.org/) (ensure you select **Add Python to PATH** during setup).
+2. Install the `internetarchive` tool:
+   ```cmd
+   pip install internetarchive
+   ```
+3. *(Required only for uploading patches)* Authenticate with your Internet Archive account:
+   ```cmd
+   ia configure
+   ```
+4. Run `gpatcher doctor` to verify both Python and the `ia` CLI are correctly recognized.
+
+
 ### Manual Setup (Developer Mode)
 
 If you cloned the repository directly:
