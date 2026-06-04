@@ -2,6 +2,7 @@ Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
 
 $global:GPATCHER_VERSION = '0.2'
+$global:DoctorStatusCache = $null
 
 
 function LogInfo($msg) { Write-Host "[info]  $msg" -ForegroundColor Cyan }
