@@ -66,17 +66,18 @@ def invoke_search(query: str):
         if not clean_term:
             continue
         if '*' not in clean_term and '?' not in clean_term:
-            # Append wildcard to the term to support prefix/partial matching
-            term_queries.append(f"{clean_term}*")
+            val = f"{clean_term}*"
         else:
-            term_queries.append(clean_term)
+            val = clean_term
+        # Query specific fields for wildcards to work natively in IA's search engine
+        term_queries.append(f"(title:{val} OR identifier:{val} OR subject:{val})")
 
     if not term_queries:
         log_info(f"No patches found for '{query}'.")
         return
 
     query_part = " AND ".join(term_queries)
-    query_str = f"(subject:gpatcher OR subject:popayarip) AND ({query_part})"
+    query_str = f"(subject:gpatcher OR subject:popayarip) AND {query_part}"
     log_info(f"Searching Internet Archive...")
     try:
         results = internetarchive.search_items(query_str, fields=['identifier', 'title'])
