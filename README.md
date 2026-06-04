@@ -43,7 +43,7 @@ gpatcher uninstall
 .\install.ps1 -Uninstall
 ```
 
-### Internet Archive Dependencies (Optional)
+### Internet Archive Dependencies
 
 To use any features related to the Internet Archive (**Search & Fetch**, and **Upload** operations), you need Python and the `internetarchive` CLI installed:
 
