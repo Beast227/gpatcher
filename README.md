@@ -21,9 +21,13 @@ Generate a small binary patch between two extracted game versions, share it via 
 
 The Python version runs on Windows, macOS, and any Linux distribution. It has automated native binary retrieval and handles Python dependencies seamlessly.
 
-#### One-Line Installation (Directly from GitHub):
+#### One-Line Installation (Directly from Release):
 ```bash
-pip install git+https://github.com/Beast227/gpatcher.git@feature/python-port
+pip install https://github.com/Beast227/gpatcher/releases/download/v0.3.0/gpatcher-0.3.0-py3-none-any.whl
+```
+Or install the latest development code directly from GitHub:
+```bash
+pip install git+https://github.com/Beast227/gpatcher.git
 ```
 Once installed, the `gpatcher` command is available globally on your machine. Run `gpatcher doctor` or `gpatcher ui` to start.
 
