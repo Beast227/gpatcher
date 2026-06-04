@@ -49,6 +49,25 @@ def invoke_apply(patch_path: str, target: str, dry_run: bool = False, no_backup:
         m = read_manifest_file(manifest_path)
         log_info(f"{m['game']} {m['old_version']} -> {m['new_version']} ({len(m['ops'])} ops)")
         
+        log_info("Pre-flight: checking game version...")
+        from gpatcher.core.version_detect import detect_version
+        target_ver = detect_version(target)
+        if target_ver:
+            log_info(f"Target directory auto-detected version: {target_ver}")
+            if target_ver != m['old_version']:
+                raise ValueError(
+                    f"Version mismatch! The target directory is at version '{target_ver}', "
+                    f"but the patch requires version '{m['old_version']}'."
+                )
+        else:
+            if not sys.stdin.isatty():
+                log_warn("Could not auto-detect target directory version (non-interactive environment). Continuing with file-based verification...")
+            else:
+                print(f"Could not auto-detect the version of the target directory: {target}")
+                confirm = input(f"Is the target directory at version '{m['old_version']}'? (y/N): ").strip().lower()
+                if confirm not in ('y', 'yes'):
+                    raise RuntimeError("Aborted. Target version could not be verified.")
+
         log_info("Pre-flight: verifying old install...")
         mismatch = []
         total_verify = len(m['ops'])

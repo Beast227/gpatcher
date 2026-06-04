@@ -391,14 +391,20 @@ def invoke_interactive_menu():
             draw_box_top("Create Game Patch")
             game = read_text_input("Enter game title (e.g. Hades)")
             if game is None: continue
-            old_ver = read_text_input("Enter old version")
-            if old_ver is None: continue
-            new_ver = read_text_input("Enter new version")
-            if new_ver is None: continue
             old_dir = read_path_input("Enter old game directory", must_exist=True, is_directory=True)
             if old_dir is None: continue
             new_dir = read_path_input("Enter new game directory", must_exist=True, is_directory=True)
             if new_dir is None: continue
+
+            # Auto-detect versions
+            from gpatcher.core.version_detect import detect_version
+            detected_old = detect_version(old_dir) or ""
+            detected_new = detect_version(new_dir) or ""
+
+            old_ver = read_text_input("Enter old version", default=detected_old)
+            if old_ver is None: continue
+            new_ver = read_text_input("Enter new version", default=detected_new)
+            if new_ver is None: continue
             out_dir = read_text_input("Enter output folder", default=".")
             if out_dir is None: continue
             custom_ex = read_text_input("Custom excludes (e.g. Mods/*,*.bak) [Optional]")

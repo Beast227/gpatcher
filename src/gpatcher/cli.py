@@ -31,8 +31,8 @@ def main(args=None):
     create_parser.add_argument("--old", required=True, help="Old version directory")
     create_parser.add_argument("--new", required=True, help="New version directory")
     create_parser.add_argument("--game", required=True, help="Name of the game")
-    create_parser.add_argument("--old-ver", required=True, help="Old version label")
-    create_parser.add_argument("--new-ver", required=True, help="New version label")
+    create_parser.add_argument("--old-ver", help="Old version label (auto-detected if omitted)")
+    create_parser.add_argument("--new-ver", help="New version label (auto-detected if omitted)")
     create_parser.add_argument("--out", default=".", help="Output directory for the patch bundle")
     create_parser.add_argument("--exclude", default="", help="Comma or semicolon separated exclusion pattern")
 

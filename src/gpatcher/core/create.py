@@ -11,7 +11,10 @@ from gpatcher.core.manifest import new_manifest, write_manifest_file, get_game_s
 from gpatcher.tools.diff import invoke_hdiffz
 from gpatcher.tools.archive import compress_dir
 
-def invoke_create(old_dir: str, new_dir: str, game: str, old_ver: str, new_ver: str, out_dir: str = '.', exclude: List[str] = None) -> str:
+import sys
+from gpatcher.core.version_detect import detect_version
+
+def invoke_create(old_dir: str, new_dir: str, game: str, old_ver: str = None, new_ver: str = None, out_dir: str = '.', exclude: List[str] = None) -> str:
     """Generates a delta patch package (*.patch.zip) between two game installations."""
     if not os.path.isdir(old_dir):
         raise FileNotFoundError(f"Old directory not found: {old_dir}")
@@ -19,6 +22,30 @@ def invoke_create(old_dir: str, new_dir: str, game: str, old_ver: str, new_ver: 
         raise FileNotFoundError(f"New directory not found: {new_dir}")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir, exist_ok=True)
+
+    if not old_ver:
+        old_ver = detect_version(old_dir)
+        if not old_ver:
+            if not sys.stdin.isatty():
+                raise ValueError(f"Could not auto-detect version for old directory and running in non-interactive environment: {old_dir}")
+            print(f"Could not auto-detect version for old directory: {old_dir}")
+            old_ver = input("Enter old version: ").strip()
+            if not old_ver:
+                raise ValueError("Old version is required.")
+        else:
+            log_info(f"Auto-detected old version: {old_ver}")
+
+    if not new_ver:
+        new_ver = detect_version(new_dir)
+        if not new_ver:
+            if not sys.stdin.isatty():
+                raise ValueError(f"Could not auto-detect version for new directory and running in non-interactive environment: {new_dir}")
+            print(f"Could not auto-detect version for new directory: {new_dir}")
+            new_ver = input("Enter new version: ").strip()
+            if not new_ver:
+                raise ValueError("New version is required.")
+        else:
+            log_info(f"Auto-detected new version: {new_ver}")
         
     log_info(f"Hashing old install: {old_dir}")
     old_files = get_file_tree(old_dir, exclude)
