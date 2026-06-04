@@ -33,7 +33,7 @@ function Invoke-Update {
         $latestVerStr = $Matches[1]
     }
 
-    $currentVerStr = $GPATCHER_VERSION
+    $currentVerStr = $global:GPATCHER_VERSION
     if ($currentVerStr -match '^(\d+(?:\.\d+)+)') {
         $currentVerStr = $Matches[1]
     }
@@ -48,11 +48,11 @@ function Invoke-Update {
     }
 
     if (-not $isNewer -and -not $Force) {
-        LogOk "gpatcher is already up to date (v$GPATCHER_VERSION)."
+        LogOk "gpatcher is already up to date (v$global:GPATCHER_VERSION)."
         return
     }
 
-    LogInfo "Updating gpatcher from v$GPATCHER_VERSION to $latestTag..."
+    LogInfo "Updating gpatcher from v$global:GPATCHER_VERSION to $latestTag..."
 
     $asset = $rel.assets | Where-Object {
         $_.name -match 'win.*64' -and $_.name -like '*.zip'
