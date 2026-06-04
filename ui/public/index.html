@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gpatcher Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">⚡</div>
+                <div class="brand-text">
+                    <h1>gpatcher</h1>
+                    <span>v0.2 Game Delta Patches</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </button>
+                <button class="nav-item" data-tab="create">
+                    <span class="nav-icon">➕</span> Create Patch
+                </button>
+                <button class="nav-item" data-tab="apply">
+                    <span class="nav-icon">📥</span> Apply Patch
+                </button>
+                <button class="nav-item" data-tab="restore">
+                    <span class="nav-icon">↩️</span> Restore Backup
+                </button>
+                <button class="nav-item" data-tab="archive">
+                    <span class="nav-icon">☁️</span> Internet Archive
+                </button>
+                <button class="nav-item" data-tab="doctor">
+                    <span class="nav-icon">🩺</span> Diagnostics
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot online"></div>
+                    <span id="system-status">System ready</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content">
+            <!-- Header -->
+            <header class="content-header">
+                <div class="header-title">
+                    <h2 id="current-tab-title">Dashboard</h2>
+                    <p id="current-tab-desc">Overview of your game installations and patches.</p>
+                </div>
+                <button id="btn-run-doctor" class="btn btn-secondary">Run Doctor Check</button>
+            </header>
+
+            <!-- Tab Content Grid -->
+            <div class="tab-content-container">
+                <!-- Dashboard Tab -->
+                <div class="tab-content active" id="tab-dashboard">
+                    <div class="grid-2x2">
+                        <div class="card card-hero">
+                            <h3>Delta Game Patching made Simple</h3>
+                            <p>Generate binary diffs of game updates, share them to Internet Archive, and upgrade your friends instantly.</p>
+                            <div class="hero-actions">
+                                <button class="btn btn-primary" onclick="switchTab('create')">New Patch</button>
+                                <button class="btn btn-outline" onclick="switchTab('apply')">Apply Patch</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>System Diagnostics</h3>
+                            <div class="doctor-list" id="doctor-summary-list">
+                                <div class="doctor-summary-item loading">Loading diagnostics...</div>
+                            </div>
+                        </div>
+
+                        <div class="card card-wide">
+                            <h3>Quick Reference Commands</h3>
+                            <table class="cmd-table">
+                                <thead>
+                                    <tr>
+                                        <th>Command</th>
+                                        <th>Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>gpatcher create</code></td>
+                                        <td>Produce a delta patch zip between two game installations.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>gpatcher apply</code></td>
+                                        <td>Upgrade an old game installation using a delta patch.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>gpatcher restore</code></td>
+                                        <td>Revert a patch using the auto-created backup files.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>gpatcher search</code></td>
+                                        <td>Search the Internet Archive database for available game patches.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>gpatcher update</code></td>
+                                        <td>Download and install the latest gpatcher tool release from GitHub.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Patch Tab -->
+                <div class="tab-content" id="tab-create">
+                    <div class="card">
+                        <form id="form-create" class="form-grid">
+                            <div class="form-group span-2">
+                                <label for="create-game">Game Title</label>
+                                <input type="text" id="create-game" placeholder="e.g. Hades" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="create-old-ver">Old Version</label>
+                                <input type="text" id="create-old-ver" placeholder="e.g. 1.0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="create-new-ver">New Version</label>
+                                <input type="text" id="create-new-ver" placeholder="e.g. 1.1" required>
+                            </div>
+
+                            <div class="form-group span-2">
+                                <label for="create-old-dir">Old Install Directory</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="create-old-dir" placeholder="Select old game folder..." required>
+                                    <button type="button" class="btn btn-secondary btn-browse" data-type="folder" data-target="create-old-dir">Browse...</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group span-2">
+                                <label for="create-new-dir">New Install Directory</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="create-new-dir" placeholder="Select new game folder..." required>
+                                    <button type="button" class="btn btn-secondary btn-browse" data-type="folder" data-target="create-new-dir">Browse...</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group span-2">
+                                <label for="create-out-dir">Output Directory (Optional)</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="create-out-dir" placeholder="Defaults to current directory...">
+                                    <button type="button" class="btn btn-secondary btn-browse" data-type="folder" data-target="create-out-dir">Browse...</button>
+                                </div>
+                            </div>
+
+                            <div class="form-actions span-2">
+                                <button type="submit" class="btn btn-primary">Generate Patch Bundle</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Apply Patch Tab -->
+                <div class="tab-content" id="tab-apply">
+                    <div class="card">
+                        <form id="form-apply" class="form-grid">
+                            <div class="form-group span-2">
+                                <label for="apply-patch">Patch Package (.zip file or Web URL)</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="apply-patch" placeholder="Select local patch ZIP or enter HTTP download URL..." required>
+                                    <button type="button" class="btn btn-secondary btn-browse" data-type="file" data-filter="Patch Files (*.zip)|*.zip" data-target="apply-patch">Browse...</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group span-2">
+                                <label for="apply-target">Target Game Install Directory (Old Version)</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="apply-target" placeholder="Select install directory to upgrade..." required>
+                                    <button type="button" class="btn btn-secondary btn-browse" data-type="folder" data-target="apply-target">Browse...</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group span-2 flex-row">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="apply-dry-run">
+                                    <span class="checkmark"></span>
+                                    Dry Run (Verify files without making modifications)
+                                </label>
+                            </div>
+
+                            <div class="form-group span-2 flex-row">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="apply-no-backup">
+                                    <span class="checkmark"></span>
+                                    Disable Backup (Skip backup zip creation - faster but less safe)
+                                </label>
+                            </div>
+
+                            <div class="form-group span-2 flex-row">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="apply-keep-backup" checked>
+                                    <span class="checkmark"></span>
+                                    Keep Backup (Retain backup for future undo/restore commands)
+                                </label>
+                            </div>
+
+                            <div class="form-actions span-2">
+                                <button type="submit" class="btn btn-primary">Apply Update Patch</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Restore Backup Tab -->
+                <div class="tab-content" id="tab-restore">
+                    <div class="card">
+                        <form id="form-restore" class="form-grid">
+                            <div class="form-group span-2">
+                                <label for="restore-target">Target Game Install Directory</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="restore-target" placeholder="Select the folder where patch was applied..." required>
+                                    <button type="button" class="btn btn-secondary btn-browse" data-type="folder" data-target="restore-target">Browse...</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group span-2">
+                                <label for="restore-backup">Backup ID / Folder Name (Optional)</label>
+                                <input type="text" id="restore-backup" placeholder="Defaults to latest backup (e.g. .gpatcher-backup-timestamp)">
+                            </div>
+
+                            <div class="form-group span-2 flex-row">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="restore-keep-backup">
+                                    <span class="checkmark"></span>
+                                    Keep Backup Folder (Do not delete the backup files after restore)
+                                </label>
+                            </div>
+
+                            <div class="form-actions span-2">
+                                <button type="submit" class="btn btn-primary">Restore and Revert Patch</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Internet Archive Tab -->
+                <div class="tab-content" id="tab-archive">
+                    <!-- Search Archive Sub-card -->
+                    <div class="card search-card">
+                        <h3>Search available patches</h3>
+                        <div class="input-with-button">
+                            <input type="text" id="search-query" placeholder="Enter game title to search..." required>
+                            <button id="btn-search" class="btn btn-primary">Search IA</button>
+                        </div>
+                        <div class="search-results" id="search-results">
+                            <!-- Populated dynamically -->
+                            <p class="search-results-placeholder">Enter a search query to browse available game patches on Internet Archive.</p>
+                        </div>
+                    </div>
+
+                    <!-- Upload Patch Sub-card -->
+                    <div class="card">
+                        <h3>Publish Patch to Internet Archive</h3>
+                        <form id="form-upload" class="form-grid">
+                            <div class="form-group span-2">
+                                <label for="upload-patch">Local Patch File (.zip)</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="upload-patch" placeholder="Select patch ZIP file to upload..." required>
+                                    <button type="button" class="btn btn-secondary btn-browse" data-type="file" data-filter="Patch Files (*.patch.zip)|*.patch.zip" data-target="upload-patch">Browse...</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="upload-creator">Creator Name (Optional)</label>
+                                <input type="text" id="upload-creator" placeholder="Anonymous">
+                            </div>
+                            <div class="form-group">
+                                <label for="upload-desc">Patch Description</label>
+                                <input type="text" id="upload-desc" placeholder="Game patch generated by gpatcher">
+                            </div>
+
+                            <div class="form-actions span-2">
+                                <button type="submit" class="btn btn-primary">Upload to Internet Archive</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Diagnostics Tab -->
+                <div class="tab-content" id="tab-doctor">
+                    <div class="card card-wide">
+                        <div class="diag-header">
+                            <h3>Diagnostic Health Diagnostics</h3>
+                            <button id="btn-diag-refresh" class="btn btn-secondary">Refresh Checks</button>
+                        </div>
+                        <div class="diag-output-console" id="diag-console">
+                            Loading diagnostic logs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Terminal Overlay / Execution Log -->
+            <section class="terminal-container">
+                <div class="terminal-header">
+                    <span class="terminal-title">🖥️ Execution Console Log</span>
+                    <div class="terminal-actions">
+                        <button id="btn-clear-terminal" class="btn btn-secondary btn-small">Clear</button>
+                        <button id="btn-stop-execution" class="btn btn-danger btn-small" disabled>Abort</button>
+                    </div>
+                </div>
+                <div class="terminal-body" id="terminal-body">
+                    <div class="terminal-line system-line">[system] Welcome to gpatcher UI. Ready to execute patches.</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
