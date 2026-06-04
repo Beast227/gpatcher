@@ -9,6 +9,10 @@ from gpatcher.tools.archive import expand_dir
 
 def invoke_update(force: bool = False):
     """Checks for newer releases on GitHub and updates the gpatcher installation."""
+    gpatcher_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    package_dir = os.path.dirname(gpatcher_dir)
+    project_root = os.path.dirname(package_dir)
+
     # 1. Check if running from a Git repository
     curr = os.path.abspath(__file__)
     is_git_clone = False
