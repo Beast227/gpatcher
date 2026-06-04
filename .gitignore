@@ -6,3 +6,15 @@ tests/fixtures/v2/
 .gpatcher-backup-*/
 .popayarip-backup-*/
 .antigravitycli/
+
+# Python build artifacts and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+src/*.egg-info/
+build/
+dist/
+

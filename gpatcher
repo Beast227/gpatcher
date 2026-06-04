@@ -1,2 +1,12 @@
 #!/bin/sh
-pwsh -NoProfile -ExecutionPolicy Bypass -File "$(dirname "$0")/gpatcher.ps1" "$@"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+export PYTHONPATH="$SCRIPT_DIR/src:$PYTHONPATH"
+
+if command -v python3 >/dev/null 2>&1; then
+    exec python3 -m gpatcher "$@"
+elif command -v python >/dev/null 2>&1; then
+    exec python -m gpatcher "$@"
+else
+    # Fallback to pwsh if python is not available
+    exec pwsh -NoProfile -ExecutionPolicy Bypass -File "$SCRIPT_DIR/gpatcher.ps1" "$@"
+fi
