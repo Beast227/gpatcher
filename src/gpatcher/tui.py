@@ -2,6 +2,7 @@ import sys
 import os
 import shutil
 import time
+import re
 from gpatcher.core.common import Colors, get_bin_path, get_app_data_dir, log_info, log_ok, log_warn, log_err
 from gpatcher.core.apply import invoke_apply
 from gpatcher.core.create import invoke_create
