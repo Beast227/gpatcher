@@ -95,13 +95,6 @@ $libDst = Join-Path $InstallDir 'lib'
 Copy-Item -LiteralPath $libSrc -Destination $libDst -Recurse -Force
 Write-Host "  Copied: lib/ ($((Get-ChildItem $libDst -File).Count) files)" -ForegroundColor Gray
 
-# Copy ui/
-$uiSrc = Join-Path $PSScriptRoot 'ui'
-$uiDst = Join-Path $InstallDir 'ui'
-if (Test-Path -LiteralPath $uiSrc) {
-    Copy-Item -LiteralPath $uiSrc -Destination $uiDst -Recurse -Force
-    Write-Host "  Copied: ui/ ($((Get-ChildItem $uiDst -Recurse -File).Count) files)" -ForegroundColor Gray
-}
 
 # Copy bin/
 $binSrc = Join-Path $PSScriptRoot 'bin'

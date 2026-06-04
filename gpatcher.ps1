@@ -28,8 +28,7 @@ Usage:
   gpatcher fetch   --game <slug> --from <v> --to <v> [--out <dir>]
   gpatcher verify  --install <dir> --against <manifest-or-bundle>
   gpatcher doctor
-  gpatcher ui      -- start interactive console UI
-  gpatcher webui   -- start web UI dashboard
+  gpatcher ui
   gpatcher update  [--force]
   gpatcher uninstall
   gpatcher help
@@ -215,19 +214,6 @@ try {
         }
         'doctor' { Invoke-Doctor }
         'ui' { Invoke-InteractiveMenu }
-        'webui' {
-            if (-not (Test-CommandExists 'node')) {
-                throw "Node.js is required to run the web UI. Please install it from https://nodejs.org/"
-            }
-            $uiServer = Join-Path $PSScriptRoot 'ui\server.js'
-            if (-not (Test-Path -LiteralPath $uiServer)) {
-                throw "UI server file not found at $uiServer"
-            }
-            LogOk "Starting gpatcher web UI..."
-            LogInfo "Opening http://localhost:3000 in your browser..."
-            Start-Process "http://localhost:3000"
-            node $uiServer
-        }
         'update' {
             Invoke-Update -Force:($parsed.Flags.ContainsKey('force'))
         }

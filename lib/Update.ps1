@@ -100,11 +100,6 @@ function Invoke-Update {
             Copy-Item -LiteralPath $libSrc -Destination (Join-Path $PSScriptRoot 'lib') -Recurse -Force
         }
 
-        # Copy ui/ (if present)
-        $uiSrc = Join-Path $extractDir 'ui'
-        if (Test-Path -LiteralPath $uiSrc) {
-            Copy-Item -LiteralPath $uiSrc -Destination (Join-Path $PSScriptRoot 'ui') -Recurse -Force
-        }
 
         # Copy bin/ (if present)
         $binSrc = Join-Path $extractDir 'bin'
