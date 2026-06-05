@@ -3,7 +3,7 @@ import os
 import shutil
 import time
 import re
-from gpatcher.core.common import GPATCHER_VERSION, Colors, get_bin_path, get_app_data_dir, log_info, log_ok, log_warn, log_err
+from gpatcher.core.common import GPATCHER_VERSION, Colors, log_info, log_ok, log_warn, log_err
 from gpatcher.core.apply import invoke_apply
 from gpatcher.core.create import invoke_create
 from gpatcher.core.restore import invoke_restore
@@ -105,20 +105,22 @@ def draw_box_bottom():
     w = get_layout_width()
     print(f"  {Colors.CYAN}+{'-' * w}+{Colors.RESET}")
 
+
 def get_doctor_status() -> dict:
-    is_win = sys.platform == 'win32'
-    bin_ext = '.exe' if is_win else ''
-    hdiffz = os.path.exists(get_bin_path(f"hdiffz{bin_ext}"))
-    hpatchz = os.path.exists(get_bin_path(f"hpatchz{bin_ext}"))
     python = True
+    try:
+        import detools
+        dt = True
+    except ImportError:
+        dt = False
     try:
         import internetarchive
         ia = True
     except ImportError:
         ia = False
+    
     return {
-        'hdiffz': hdiffz,
-        'hpatchz': hpatchz,
+        'detools': dt,
         'python': python,
         'ia': ia
     }
@@ -150,17 +152,14 @@ def draw_header():
     print(f"  {Colors.MAGENTA}{border}{Colors.RESET}")
 
     status = get_doctor_status()
-    hdiffz_str = "[OK] hdiffz" if status['hdiffz'] else "[ERR] hdiffz"
-    hpatchz_str = "[OK] hpatchz" if status['hpatchz'] else "[ERR] hpatchz"
+    detools_str = "[OK] detools" if status['detools'] else "[ERR] detools"
     python_str = "[OK] python" if status['python'] else "[ERR] python"
 
-    hdiffz_col = Colors.GREEN if status['hdiffz'] else Colors.RED
-    hpatchz_col = Colors.GREEN if status['hpatchz'] else Colors.RED
+    detools_col = Colors.GREEN if status['detools'] else Colors.RED
     python_col = Colors.GREEN
 
-    sys.stdout.write(f"  {Colors.GRAY}[ Status ]  ")
-    sys.stdout.write(f"{hdiffz_col}{hdiffz_str}  {Colors.GRAY}|  ")
-    sys.stdout.write(f"{hpatchz_col}{hpatchz_str}  {Colors.GRAY}|  ")
+    sys.stdout.write(f"{Colors.GRAY}[Status]")
+    sys.stdout.write(f"{detools_col}{detools_str}{Colors.GRAY}|")
     sys.stdout.write(f"{python_col}{python_str}\n{Colors.RESET}\n")
     sys.stdout.flush()
 
@@ -535,17 +534,7 @@ def invoke_interactive_menu():
             draw_box_bottom()
             invoke_doctor()
 
-        elif selection == 7:  # Fetch Binaries
-            draw_box_top("Fetch Dependencies")
-            draw_box_bottom()
-            print(f"\n  {Colors.YELLOW}> Downloading HDiffPatch binaries...{Colors.RESET}")
-            try:
-                from gpatcher.tools.fetch import fetch_hdiffpatch
-                fetch_hdiffpatch()
-            except Exception as e:
-                log_err(f"Fetch failed: {e}")
-
-        elif selection == 8:  # Check / Install gpatcher updates
+        elif selection == 7:  # Check / Install gpatcher updates
             draw_box_top("Check for updates")
             draw_box_bottom()
             force = read_confirm_choice("Force update check/re-install?", default=False)

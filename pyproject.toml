@@ -15,6 +15,7 @@ classifiers = [
 dependencies = [
     "internetarchive>=3.0.0",
     "requests>=2.25.0",
+    "detools>=0.50.0",
 ]
 
 [project.scripts]
